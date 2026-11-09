@@ -1,0 +1,1407 @@
+{
+  "format": "pazulu-suggested-sources",
+  "snapshot": "2026-11-05",
+  "disclaimer": "Statuts issus de la liste fournie. L’accueil accessible ne garantit pas les chapitres ou leur disponibilité dans Pazulu.",
+  "sources": [
+    {
+      "rank": 1,
+      "url": "https://blossom-scans.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 2,
+      "url": "https://rimuscan.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 3,
+      "url": "https://manga-scantrad.io",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 4,
+      "url": "https://astral-manga.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 5,
+      "url": "https://scanreader.net",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 6,
+      "url": "https://mangakawaii.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 7,
+      "url": "https://harmony-scan.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 8,
+      "url": "https://fmteam.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 9,
+      "url": "https://furyosociety.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 10,
+      "url": "https://chaostrad.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 11,
+      "url": "https://mangas-origines.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 12,
+      "url": "https://sushiscan.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 13,
+      "url": "https://celestial-scan.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 14,
+      "url": "https://lelscanfr.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 15,
+      "url": "https://sushiscan.net",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 16,
+      "url": "https://anime-sama.to",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 17,
+      "url": "https://bigsolo.org",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 18,
+      "url": "https://teamscanr.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 19,
+      "url": "https://manga-corporation.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 20,
+      "url": "https://novelfrance.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 21,
+      "url": "https://noveldeglace.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 22,
+      "url": "https://chireads.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 23,
+      "url": "https://novhell.org",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 24,
+      "url": "https://novelneko.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 25,
+      "url": "https://noveldelaube.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 26,
+      "url": "https://yumenovel.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 27,
+      "url": "https://xiaowaz.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 28,
+      "url": "https://j-garden.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 29,
+      "url": "https://kisswood.eu",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 30,
+      "url": "https://fr.novelcool.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 31,
+      "url": "https://weebcentral.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 32,
+      "url": "https://mangaball.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 33,
+      "url": "https://mangakatana.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 34,
+      "url": "https://mangapill.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 35,
+      "url": "https://mangahere.cc",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 36,
+      "url": "https://asurascans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 37,
+      "url": "https://flamecomics.xyz",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 38,
+      "url": "https://tcbonepiecechapters.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 39,
+      "url": "https://dynasty-scans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 40,
+      "url": "https://demonicscans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 41,
+      "url": "https://drakecomic.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 42,
+      "url": "https://hivetoons.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 43,
+      "url": "https://vortexscans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 44,
+      "url": "https://manhuaplus.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 45,
+      "url": "https://mangagg.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 46,
+      "url": "https://mgeko.cc",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 47,
+      "url": "https://manhwatop.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 48,
+      "url": "https://mangaread.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 49,
+      "url": "https://mangabats.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 50,
+      "url": "https://mangatown.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 51,
+      "url": "https://manganel.me",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 52,
+      "url": "https://mangareader.site",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 53,
+      "url": "https://mangavyvy.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 54,
+      "url": "https://mangafox.fun",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 55,
+      "url": "https://manganato.gg",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 56,
+      "url": "https://manhwazone.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 57,
+      "url": "https://manhuaplus.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 58,
+      "url": "https://mangade.io",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 59,
+      "url": "https://mangadna.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 60,
+      "url": "https://manganow.to",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 61,
+      "url": "https://mangapanda.onl",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 62,
+      "url": "https://mangayi.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 63,
+      "url": "https://mgread.io",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 64,
+      "url": "https://mangazin.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 65,
+      "url": "https://manhuahot.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 66,
+      "url": "https://manhuanext.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 67,
+      "url": "https://manhuatop.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 68,
+      "url": "https://manhwareads.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 69,
+      "url": "https://manhwabuddy.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 70,
+      "url": "https://manhwanex.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 71,
+      "url": "https://manhuascans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 72,
+      "url": "https://comivex.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 73,
+      "url": "https://aquareader.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 74,
+      "url": "https://athreascans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 75,
+      "url": "https://ezmanga.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 76,
+      "url": "https://magustoon.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 77,
+      "url": "https://rizzfables.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 78,
+      "url": "https://akazascans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 79,
+      "url": "https://arc-relight.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 80,
+      "url": "https://arenascan.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 81,
+      "url": "https://assortedscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 82,
+      "url": "https://bunmanga.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 83,
+      "url": "https://colorizedmangas.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 84,
+      "url": "https://comichubfree.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 85,
+      "url": "https://divascans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 86,
+      "url": "https://en-thunderscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 87,
+      "url": "https://erisscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 88,
+      "url": "https://evascans.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 89,
+      "url": "https://fanfox.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 90,
+      "url": "https://gdscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 91,
+      "url": "https://genztoons.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 92,
+      "url": "https://comicfury.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 93,
+      "url": "https://globalcomix.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 94,
+      "url": "https://comicaurora.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 95,
+      "url": "https://comicasura.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 96,
+      "url": "https://comix.to",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 97,
+      "url": "https://mangafire.to",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 98,
+      "url": "https://atsu.moe",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 99,
+      "url": "https://mangak.io",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 100,
+      "url": "https://mangataro.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Partiel"
+    },
+    {
+      "rank": 101,
+      "url": "https://royalroad.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 102,
+      "url": "https://scribblehub.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 103,
+      "url": "https://honeyfeed.fm",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 104,
+      "url": "https://baka-tsuki.org",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 105,
+      "url": "https://novelfull.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 106,
+      "url": "https://readnovelfull.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 107,
+      "url": "https://freewebnovel.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 108,
+      "url": "https://readhive.org",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 109,
+      "url": "https://wuxiabox.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 110,
+      "url": "https://wtr-lab.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 111,
+      "url": "https://sonicmtl.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 112,
+      "url": "https://novelcool.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 113,
+      "url": "https://inkitt.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 114,
+      "url": "https://moonquill.com",
+      "language": "en",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Accueil/catalogue accessible"
+    },
+    {
+      "rank": 115,
+      "url": "https://scantrad-union.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 116,
+      "url": "https://kiwiyascans.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 117,
+      "url": "https://lanortrad.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 118,
+      "url": "https://lelmanga.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 119,
+      "url": "https://scansfr.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 120,
+      "url": "https://phenix-scans.co",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 121,
+      "url": "https://mangamoins.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 122,
+      "url": "https://mangahub.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 123,
+      "url": "https://scan-vf.net",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 124,
+      "url": "https://sirenscans.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 125,
+      "url": "https://solaris-scans.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 126,
+      "url": "https://manga-nova.com",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 127,
+      "url": "https://aralosbd.fr",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 128,
+      "url": "https://lesporoiniens.org",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 129,
+      "url": "https://epsilonsoft.to",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 130,
+      "url": "https://japscan.foo",
+      "language": "fr",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 131,
+      "url": "https://world-novel.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 132,
+      "url": "https://drakenovel.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 133,
+      "url": "https://darkia1030-tl.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 134,
+      "url": "https://lightnovelvf.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 135,
+      "url": "https://reaper-novel.fr",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 136,
+      "url": "https://trad-index.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 137,
+      "url": "https://harkeneliwood.wordpress.com",
+      "language": "fr",
+      "category": "Webnovel / light novel",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 138,
+      "url": "https://mangadot.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 139,
+      "url": "https://xcomic.me",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 140,
+      "url": "https://kagane.to",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 141,
+      "url": "https://lunarx.to",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 142,
+      "url": "https://saymanhwa.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 143,
+      "url": "https://firescans.xyz",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 144,
+      "url": "https://mangadistrict.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 145,
+      "url": "https://mangago.me",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 146,
+      "url": "https://mangakakalot.gg",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 147,
+      "url": "https://mangatx.cc",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 148,
+      "url": "https://nyxscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 149,
+      "url": "https://silentquill.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 150,
+      "url": "https://stonescape.xyz",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 151,
+      "url": "https://webtoon.xyz",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 152,
+      "url": "https://1manga.co",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 153,
+      "url": "https://akaicomic.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 154,
+      "url": "https://anisascans.in",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 155,
+      "url": "https://artlapsa.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 156,
+      "url": "https://bakkin.moe",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 157,
+      "url": "https://bato1.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 158,
+      "url": "https://boratscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 159,
+      "url": "https://brainrotcomics.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 160,
+      "url": "https://chikari.moe",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 161,
+      "url": "https://cocomic.co",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 162,
+      "url": "https://comickfan.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 163,
+      "url": "https://comicland.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 164,
+      "url": "https://culturedworks.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 165,
+      "url": "https://dflow.alwaysdata.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 166,
+      "url": "https://dragontea.ink",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 167,
+      "url": "https://duskscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 168,
+      "url": "https://en-hijala.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 169,
+      "url": "https://fairyscans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 170,
+      "url": "https://gakamangas.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 171,
+      "url": "https://galaxymanga.io",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 172,
+      "url": "https://gojoscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 173,
+      "url": "https://gourmetsupremacy.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 174,
+      "url": "https://grimscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 175,
+      "url": "https://hachirumi.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 176,
+      "url": "https://hadesscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 177,
+      "url": "https://hiveworkscomics.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 178,
+      "url": "https://hunlightcomics.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 179,
+      "url": "https://hyakuro.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 180,
+      "url": "https://infinityscans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 181,
+      "url": "https://isekaiscan.top",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 182,
+      "url": "https://jinmangas.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 183,
+      "url": "https://kaliscan.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 184,
+      "url": "https://kaynscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 185,
+      "url": "https://kencomics.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 186,
+      "url": "https://kewnscans.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 187,
+      "url": "https://kingofshojo.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 188,
+      "url": "https://kissmanga.in",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 189,
+      "url": "https://kokomangas.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 190,
+      "url": "https://ksgroupscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 191,
+      "url": "https://kunmanga.online",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 192,
+      "url": "https://kuramanga.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 193,
+      "url": "https://lagoonscans.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 194,
+      "url": "https://lhtranslation.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 195,
+      "url": "https://likemanga.ink",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 196,
+      "url": "https://lilymanga.net",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 197,
+      "url": "https://linkmanga.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 198,
+      "url": "https://luacomic.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 199,
+      "url": "https://luminaretranslations.com",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    },
+    {
+      "rank": 200,
+      "url": "https://lunatoons.org",
+      "language": "en",
+      "category": "Manga / manhwa / manhua / webtoon",
+      "reportedStatus": "Non confirmé"
+    }
+  ]
+}

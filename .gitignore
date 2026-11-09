@@ -1,0 +1,16 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+pubspec.lock.bak
+# Généré par « flutter create » (Compiler-Windows.cmd ou le workflow)
+windows/
+# Sorties locales
+dist/
+*.log
+.idea/
+.vscode/

@@ -1,0 +1,43 @@
+const fs = require('fs');
+const pathLib = require('path');
+const vm = require('vm');
+const assert = require('assert');
+const path = pathLib.join(__dirname, '..', 'lib', 'core', 'visible_pages.dart');
+const source = fs.readFileSync(path,'utf8');
+const match = source.match(/const visiblePagesScript = r'''([\s\S]*?)''';/);
+assert(match, 'Cannot find script');
+const scan = match[1];
+const turnSource = fs.readFileSync(pathLib.join(__dirname, '..', 'lib', 'core', 'browser_page_turn.dart'),'utf8');
+let turn = turnSource.match(/return '''([\s\S]*?)''';/)[1].replace(/\\\$/g, '$').replace(/\\\\/g, '\\').replaceAll('$page','2').replaceAll('$selectIndex','0');
+const pictures = Array.from({length:14},(_,i)=>`https://cdn.example.org/solo/page-${String(i+1).padStart(2,'0')}.webp`);
+let image = {attributes:{src:pictures[0]},getAttribute(n){return this.attributes[n] || null;}};
+const pages = Array.from({length:14},(_,i)=>({textContent:`${i+1}/14`,value:`${i+1}`}));
+const select = {id:'pageSelection',name:'page',className:'form-control',parentElement:{className:'reader-pagination'},options:pages,selectedIndex:0, dispatchEvent(e){if(e.type==='change')image.attributes.src = pictures[this.selectedIndex];}};
+const doc = {baseURI:'https://sushiscan.net/solo-leveling-chap-198/', querySelectorAll(sel) {
+ if(sel==='select') return [select];
+ if(sel==='#readerarea img') return [image];
+ if(sel.includes('.page-number')&&sel.includes('.reader-pagination')) return [{textContent:`${select.selectedIndex+1}/14`}];
+ return [];
+}};
+const ctx={document:doc,location:{href:doc.baseURI},URL,Event:class Event{constructor(type){this.type=type;}},Set,JSON,Number};
+const evaluate = (script) => vm.runInNewContext(script,ctx,{timeout:1000});
+let start = JSON.parse(evaluate(scan));
+assert.equal(start.images.length,1);
+assert.equal(start.pagination.total,14);
+assert.equal(start.pagination.current,1);
+assert.equal(start.pagination.selectIndex,0);
+assert.deepEqual(start.images,[pictures[0]]);
+assert.equal(JSON.parse(evaluate(turn)).accepted,true);
+let second = JSON.parse(evaluate(scan));
+assert.equal(second.pagination.current,2);
+assert.deepEqual(second.images,[pictures[1]]);
+const collected = [start.images[0], second.images[0]];
+for(let page=3;page<=14;page++){
+ let t = turn.replace(/indexOf\(2\)/,'indexOf('+page+')').replace(/page:2/,'page:'+page);
+ assert.equal(JSON.parse(evaluate(t)).accepted,true);
+ let data = JSON.parse(evaluate(scan));
+ assert.equal(data.pagination.current,page);
+ collected.push(data.images[0]);
+}
+assert.deepEqual(collected,pictures);
+console.log('PASS: 14 pages, DOM read, selection events, correct image order, no guessed URLs');

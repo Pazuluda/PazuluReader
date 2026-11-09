@@ -1,0 +1,10 @@
+PAZULU READER V0.4.21.1 - CORRECTIF DU SCRIPT TESTER-CONNECTEURS
+
+Corrige le plantage PowerShell "Les types des arguments ne correspondent pas"
+dans l'assemblage du rapport JSON via List[object].ToArray().
+Affiche et enregistre la cause des erreurs par source (etape, type, ligne).
+
+La compilation Flutter et le moteur Suwayomi ne sont pas modifies.
+Cette correction ne restaure pas les chapitres indisponibles de Scan-Manga.
+
+Lancer Tester-Connecteurs.cmd apres avoir demarre Suwayomi Server.
