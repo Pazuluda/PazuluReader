@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "minimumEngineVersion": "2.0.0",
+  "id": "pazulu.mangadex",
+  "name": "MangaDex",
+  "version": "2.0.0",
+  "languages": [
+    "en",
+    "fr"
+  ],
+  "contentTypes": [
+    "manga",
+    "manhwa",
+    "manhua",
+    "webtoon"
+  ],
+  "hosts": [
+    "mangadex.org",
+    "api.mangadex.org",
+    "uploads.mangadex.org"
+  ],
+  "imageHosts": [
+    "mangadex.network"
+  ],
+  "capabilities": {
+    "search": true,
+    "chapters": true,
+    "pages": true,
+    "latest": true
+  },
+  "transport": "native",
+  "nativeAdapter": "mangadex",
+  "paginationMode": "auto",
+  "readingDirection": "auto",
+  "imageMode": "direct",
+  "rateLimit": {
+    "requestsPerMinute": 240,
+    "maxConcurrent": 2
+  },
+  "validation": "VERIFIED_FIXTURE_ONLY",
+  "tests": [
+    {
+      "kind": "search",
+      "query": "Solo Leveling"
+    }
+  ],
+  "notes": "API publique officielle. Le nombre de pages est fourni par l'API : complétude vérifiable. Chapitres 'externalUrl' (MANGA Plus…) = lien éditeur, jamais des pages."
+}

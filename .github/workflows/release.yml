@@ -1,0 +1,81 @@
+# Compile Pazulu Reader pour Windows et publie la release GitHub.
+# Se lance quand un tag « vX.Y.Z » est créé (bouton « Publish release » sur GitHub).
+# Fichiers publiés :
+#  - PazuluReader-X.Y.Z-setup.exe   : installateur (sans droits administrateur)
+#  - PazuluReader-X.Y.Z-windows.zip : version portable, utilisée par le bouton de mise à jour de l'app
+name: Release Windows
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version du tag
+        id: v
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = (Select-String -Path pubspec.yaml -Pattern '^version: (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value }
+          $app = (Select-String -Path lib/core/app_state.dart -Pattern "appVersion = '([^']+)'").Matches[0].Groups[1].Value
+          if ($app -ne $version) { throw "Le tag ($version) et appVersion ($app) ne correspondent pas : corrige lib/core/app_state.dart." }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+
+      - name: Projet Windows
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          if (-not (Test-Path windows)) { flutter create --platforms=windows --org com.pazulu --project-name pazulu_reader . }
+          if (Test-Path test/widget_test.dart) { Remove-Item test/widget_test.dart }
+          ./tools/configure_platforms.ps1
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Tests
+        run: flutter test
+
+      - name: Compilation
+        run: flutter build windows --release
+
+      - name: ZIP portable
+        shell: pwsh
+        run: |
+          $v = '${{ steps.v.outputs.version }}'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/windows/x64/runner/Release "dist/PazuluReader-$v-windows" -Recurse
+          Compress-Archive -Path "dist/PazuluReader-$v-windows/*" -DestinationPath "dist/PazuluReader-$v-windows.zip"
+
+      - name: Installateur .exe
+        shell: pwsh
+        run: |
+          $v = '${{ steps.v.outputs.version }}'
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress | Out-Null }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' }
+          & $iscc "/DAppVersion=$v" "/DSourceDir=..\dist\PazuluReader-$v-windows" tools/installer.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup a échoué' }
+
+      - name: Publication
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Pazulu Reader ${{ steps.v.outputs.version }}
+          files: |
+            dist/PazuluReader-${{ steps.v.outputs.version }}-setup.exe
+            dist/PazuluReader-${{ steps.v.outputs.version }}-windows.zip

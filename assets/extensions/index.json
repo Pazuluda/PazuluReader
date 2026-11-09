@@ -1,0 +1,12 @@
+{
+  "format": "pazulu-bundled-extensions",
+  "files": [
+    "assets/extensions/pazulu.mangadex.json",
+    "assets/extensions/pazulu.peppercarrot.json",
+    "assets/extensions/pazulu.sushiscan.json",
+    "assets/extensions/pazulu.manhuaus.json",
+    "assets/extensions/pazulu.manhuatop.json",
+    "assets/extensions/pazulu.thunderscans.json",
+    "assets/extensions/pazulu.kingofshojo.json"
+  ]
+}

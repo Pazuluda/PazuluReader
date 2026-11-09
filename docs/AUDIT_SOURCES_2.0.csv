@@ -1,0 +1,215 @@
+nom,domaine,langues,origine,extension,statut,note
+ManhuaUS,manhuaus.com,en,catalogue historique,pazulu.manhuaus,"UNVERIFIED (profil Madara, IMPLEMENTED_UNTESTED, désactivé)",Activer puis tester.
+AsuraScans,asurascans.com,en,catalogue historique,—,UNVERIFIED,Site devenu une application JavaScript propriétaire (lecteur non HTML classique) : pas de profil livré ; candidat transport « browser » à écrire et valider sur Windows.
+Aethon Webcomics,aethonwebcomics.com,en,catalogue historique,—,EXTERNAL_ONLY (politique),Profil « official » conservé de la V0.5.4.
+Scan-Manga,scan-manga.com,fr,catalogue historique,—,UNVERIFIED,Lecteur à protection d’images connue : aucune extraction tant qu’un test réel n’a pas montré des images publiques non protégées.
+EN-ThunderScans,en-thunderscans.com,en,catalogue historique,pazulu.thunderscans,"UNVERIFIED (profil MangaThemesia + WebView2, IMPLEMENTED_UNTESTED, désactivé)",Activer puis tester.
+ToonGod,toongod.org,en,catalogue historique,—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages.
+Swordhound,w28.swordhound.com,en,catalogue historique,—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages.
+SSS-Class Hunter,sss.sssclasshunter.com,en,catalogue historique,—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages.
+ManhuaTop,manhuatop.org,en,catalogue historique,pazulu.manhuatop,"UNVERIFIED (profil Madara, IMPLEMENTED_UNTESTED, désactivé)",Activer puis tester.
+MangaDex,mangadex.org,en/fr,catalogue historique,pazulu.mangadex,"UNVERIFIED (connecteur API natif, VERIFIED_FIXTURE_ONLY)",Connecteur API officiel. Nombre de pages fourni par l’API : FULL_READER attendu après un test réel « Tester cette source ».
+KingofShojo,kingofshojo.com,en,catalogue historique,pazulu.kingofshojo,"UNVERIFIED (profil MangaThemesia + WebView2, IMPLEMENTED_UNTESTED, désactivé)",Activer puis tester.
+WEBTOON FR,webtoons.com,fr,catalogue historique,—,EXTERNAL_ONLY (politique),Plateforme officielle : conditions d’utilisation interdisant l’extraction ; accès via le site officiel uniquement.
+WEBTOON EN,webtoons.com,en,catalogue historique,—,EXTERNAL_ONLY (politique),Plateforme officielle : conditions d’utilisation interdisant l’extraction ; accès via le site officiel uniquement.
+ManhuaFast,manhuafast.net,en,catalogue historique,—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages.
+ManhwaClan,manhwaclan.com,en,catalogue historique,—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages.
+blossom-scans,blossom-scans.com,fr,répertoire 200 (rang 1),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+rimuscan,rimuscan.fr,fr,répertoire 200 (rang 2),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manga-scantrad,manga-scantrad.io,fr,répertoire 200 (rang 3),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+astral-manga,astral-manga.fr,fr,répertoire 200 (rang 4),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+scanreader,scanreader.net,fr,répertoire 200 (rang 5),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangakawaii,mangakawaii.fr,fr,répertoire 200 (rang 6),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+harmony-scan,harmony-scan.fr,fr,répertoire 200 (rang 7),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+fmteam,fmteam.fr,fr,répertoire 200 (rang 8),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+furyosociety,furyosociety.com,fr,répertoire 200 (rang 9),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+chaostrad,chaostrad.fr,fr,répertoire 200 (rang 10),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangas-origines,mangas-origines.fr,fr,répertoire 200 (rang 11),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+sushiscan,sushiscan.fr,fr,répertoire 200 (rang 12),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+celestial-scan,celestial-scan.com,fr,répertoire 200 (rang 13),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+lelscanfr,lelscanfr.com,fr,répertoire 200 (rang 14),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+sushiscan,sushiscan.net,fr,répertoire 200 (rang 15),pazulu.sushiscan,"UNVERIFIED (connecteur natif, VERIFIED_FIXTURE_ONLY)",Liste ts_reader lue dans le HTML public ; repli WebView2 invisible page par page.
+anime-sama,anime-sama.to,fr,répertoire 200 (rang 16),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+bigsolo,bigsolo.org,fr,répertoire 200 (rang 17),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+teamscanr,teamscanr.fr,fr,répertoire 200 (rang 18),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+manga-corporation,manga-corporation.com,fr,répertoire 200 (rang 19),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+novelfrance,novelfrance.fr,fr,répertoire 200 (rang 20),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+noveldeglace,noveldeglace.com,fr,répertoire 200 (rang 21),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+chireads,chireads.com,fr,répertoire 200 (rang 22),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+novhell,novhell.org,fr,répertoire 200 (rang 23),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+novelneko,novelneko.fr,fr,répertoire 200 (rang 24),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+noveldelaube,noveldelaube.com,fr,répertoire 200 (rang 25),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+yumenovel,yumenovel.fr,fr,répertoire 200 (rang 26),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+xiaowaz,xiaowaz.fr,fr,répertoire 200 (rang 27),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+j-garden,j-garden.fr,fr,répertoire 200 (rang 28),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+kisswood,kisswood.eu,fr,répertoire 200 (rang 29),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+fr,fr.novelcool.com,fr,répertoire 200 (rang 30),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+weebcentral,weebcentral.com,en,répertoire 200 (rang 31),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangaball,mangaball.com,en,répertoire 200 (rang 32),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangakatana,mangakatana.com,en,répertoire 200 (rang 33),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangapill,mangapill.com,en,répertoire 200 (rang 34),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangahere,mangahere.cc,en,répertoire 200 (rang 35),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+flamecomics,flamecomics.xyz,en,répertoire 200 (rang 37),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+tcbonepiecechapters,tcbonepiecechapters.com,en,répertoire 200 (rang 38),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+dynasty-scans,dynasty-scans.com,en,répertoire 200 (rang 39),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+demonicscans,demonicscans.org,en,répertoire 200 (rang 40),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+drakecomic,drakecomic.net,en,répertoire 200 (rang 41),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+hivetoons,hivetoons.org,en,répertoire 200 (rang 42),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+vortexscans,vortexscans.org,en,répertoire 200 (rang 43),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhuaplus,manhuaplus.com,en,répertoire 200 (rang 44),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangagg,mangagg.com,en,répertoire 200 (rang 45),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mgeko,mgeko.cc,en,répertoire 200 (rang 46),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhwatop,manhwatop.com,en,répertoire 200 (rang 47),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangaread,mangaread.org,en,répertoire 200 (rang 48),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangabats,mangabats.com,en,répertoire 200 (rang 49),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangatown,mangatown.com,en,répertoire 200 (rang 50),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manganel,manganel.me,en,répertoire 200 (rang 51),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangareader,mangareader.site,en,répertoire 200 (rang 52),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangavyvy,mangavyvy.net,en,répertoire 200 (rang 53),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangafox,mangafox.fun,en,répertoire 200 (rang 54),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manganato,manganato.gg,en,répertoire 200 (rang 55),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhwazone,manhwazone.com,en,répertoire 200 (rang 56),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+manhuaplus,manhuaplus.org,en,répertoire 200 (rang 57),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangade,mangade.io,en,répertoire 200 (rang 58),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangadna,mangadna.com,en,répertoire 200 (rang 59),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manganow,manganow.to,en,répertoire 200 (rang 60),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangapanda,mangapanda.onl,en,répertoire 200 (rang 61),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangayi,mangayi.com,en,répertoire 200 (rang 62),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mgread,mgread.io,en,répertoire 200 (rang 63),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+mangazin,mangazin.org,en,répertoire 200 (rang 64),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhuahot,manhuahot.com,en,répertoire 200 (rang 65),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhuanext,manhuanext.com,en,répertoire 200 (rang 66),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhwareads,manhwareads.com,en,répertoire 200 (rang 68),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhwabuddy,manhwabuddy.com,en,répertoire 200 (rang 69),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhwanex,manhwanex.com,en,répertoire 200 (rang 70),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+manhuascans,manhuascans.org,en,répertoire 200 (rang 71),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+comivex,comivex.com,en,répertoire 200 (rang 72),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+aquareader,aquareader.org,en,répertoire 200 (rang 73),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+athreascans,athreascans.com,en,répertoire 200 (rang 74),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+ezmanga,ezmanga.org,en,répertoire 200 (rang 75),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+magustoon,magustoon.org,en,répertoire 200 (rang 76),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+rizzfables,rizzfables.com,en,répertoire 200 (rang 77),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+akazascans,akazascans.org,en,répertoire 200 (rang 78),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+arc-relight,arc-relight.com,en,répertoire 200 (rang 79),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+arenascan,arenascan.com,en,répertoire 200 (rang 80),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+assortedscans,assortedscans.com,en,répertoire 200 (rang 81),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+bunmanga,bunmanga.com,en,répertoire 200 (rang 82),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+colorizedmangas,colorizedmangas.com,en,répertoire 200 (rang 83),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+comichubfree,comichubfree.com,en,répertoire 200 (rang 84),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+divascans,divascans.org,en,répertoire 200 (rang 85),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+erisscans,erisscans.com,en,répertoire 200 (rang 87),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+evascans,evascans.net,en,répertoire 200 (rang 88),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+fanfox,fanfox.net,en,répertoire 200 (rang 89),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+gdscans,gdscans.com,en,répertoire 200 (rang 90),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+genztoons,genztoons.org,en,répertoire 200 (rang 91),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+comicfury,comicfury.com,en,répertoire 200 (rang 92),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+globalcomix,globalcomix.com,en,répertoire 200 (rang 93),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+comicaurora,comicaurora.com,en,répertoire 200 (rang 94),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+comicasura,comicasura.net,en,répertoire 200 (rang 95),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+comix,comix.to,en,répertoire 200 (rang 96),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+mangafire,mangafire.to,en,répertoire 200 (rang 97),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+atsu,atsu.moe,en,répertoire 200 (rang 98),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+mangak,mangak.io,en,répertoire 200 (rang 99),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+mangataro,mangataro.org,en,répertoire 200 (rang 100),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Partiel.
+royalroad,royalroad.com,en,répertoire 200 (rang 101),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+scribblehub,scribblehub.com,en,répertoire 200 (rang 102),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+honeyfeed,honeyfeed.fm,en,répertoire 200 (rang 103),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+baka-tsuki,baka-tsuki.org,en,répertoire 200 (rang 104),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+novelfull,novelfull.com,en,répertoire 200 (rang 105),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+readnovelfull,readnovelfull.com,en,répertoire 200 (rang 106),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+freewebnovel,freewebnovel.com,en,répertoire 200 (rang 107),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+readhive,readhive.org,en,répertoire 200 (rang 108),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+wuxiabox,wuxiabox.com,en,répertoire 200 (rang 109),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+wtr-lab,wtr-lab.com,en,répertoire 200 (rang 110),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+sonicmtl,sonicmtl.com,en,répertoire 200 (rang 111),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+novelcool,novelcool.com,en,répertoire 200 (rang 112),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+inkitt,inkitt.com,en,répertoire 200 (rang 113),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+moonquill,moonquill.com,en,répertoire 200 (rang 114),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Accueil/catalogue accessible.
+scantrad-union,scantrad-union.com,fr,répertoire 200 (rang 115),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kiwiyascans,kiwiyascans.com,fr,répertoire 200 (rang 116),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lanortrad,lanortrad.com,fr,répertoire 200 (rang 117),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lelmanga,lelmanga.com,fr,répertoire 200 (rang 118),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+scansfr,scansfr.com,fr,répertoire 200 (rang 119),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+phenix-scans,phenix-scans.co,fr,répertoire 200 (rang 120),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangamoins,mangamoins.com,fr,répertoire 200 (rang 121),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangahub,mangahub.fr,fr,répertoire 200 (rang 122),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+scan-vf,scan-vf.net,fr,répertoire 200 (rang 123),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+sirenscans,sirenscans.fr,fr,répertoire 200 (rang 124),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+solaris-scans,solaris-scans.fr,fr,répertoire 200 (rang 125),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+manga-nova,manga-nova.com,fr,répertoire 200 (rang 126),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+aralosbd,aralosbd.fr,fr,répertoire 200 (rang 127),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lesporoiniens,lesporoiniens.org,fr,répertoire 200 (rang 128),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+epsilonsoft,epsilonsoft.to,fr,répertoire 200 (rang 129),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+japscan,japscan.foo,fr,répertoire 200 (rang 130),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+world-novel,world-novel.fr,fr,répertoire 200 (rang 131),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+drakenovel,drakenovel.fr,fr,répertoire 200 (rang 132),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+darkia1030-tl,darkia1030-tl.com,fr,répertoire 200 (rang 133),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lightnovelvf,lightnovelvf.com,fr,répertoire 200 (rang 134),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+reaper-novel,reaper-novel.fr,fr,répertoire 200 (rang 135),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+trad-index,trad-index.com,fr,répertoire 200 (rang 136),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+harkeneliwood,harkeneliwood.wordpress.com,fr,répertoire 200 (rang 137),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangadot,mangadot.net,en,répertoire 200 (rang 138),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+xcomic,xcomic.me,en,répertoire 200 (rang 139),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kagane,kagane.to,en,répertoire 200 (rang 140),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lunarx,lunarx.to,en,répertoire 200 (rang 141),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+saymanhwa,saymanhwa.com,en,répertoire 200 (rang 142),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+firescans,firescans.xyz,en,répertoire 200 (rang 143),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangadistrict,mangadistrict.com,en,répertoire 200 (rang 144),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangago,mangago.me,en,répertoire 200 (rang 145),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangakakalot,mangakakalot.gg,en,répertoire 200 (rang 146),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+mangatx,mangatx.cc,en,répertoire 200 (rang 147),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+nyxscans,nyxscans.com,en,répertoire 200 (rang 148),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+silentquill,silentquill.net,en,répertoire 200 (rang 149),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+stonescape,stonescape.xyz,en,répertoire 200 (rang 150),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+webtoon,webtoon.xyz,en,répertoire 200 (rang 151),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+1manga,1manga.co,en,répertoire 200 (rang 152),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+akaicomic,akaicomic.org,en,répertoire 200 (rang 153),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+anisascans,anisascans.in,en,répertoire 200 (rang 154),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+artlapsa,artlapsa.com,en,répertoire 200 (rang 155),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+bakkin,bakkin.moe,en,répertoire 200 (rang 156),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+bato1,bato1.com,en,répertoire 200 (rang 157),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+boratscans,boratscans.com,en,répertoire 200 (rang 158),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+brainrotcomics,brainrotcomics.com,en,répertoire 200 (rang 159),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+chikari,chikari.moe,en,répertoire 200 (rang 160),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+cocomic,cocomic.co,en,répertoire 200 (rang 161),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+comickfan,comickfan.com,en,répertoire 200 (rang 162),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+comicland,comicland.org,en,répertoire 200 (rang 163),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+culturedworks,culturedworks.com,en,répertoire 200 (rang 164),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+dflow,dflow.alwaysdata.net,en,répertoire 200 (rang 165),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+dragontea,dragontea.ink,en,répertoire 200 (rang 166),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+duskscans,duskscans.com,en,répertoire 200 (rang 167),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+en-hijala,en-hijala.com,en,répertoire 200 (rang 168),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+fairyscans,fairyscans.org,en,répertoire 200 (rang 169),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+gakamangas,gakamangas.com,en,répertoire 200 (rang 170),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+galaxymanga,galaxymanga.io,en,répertoire 200 (rang 171),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+gojoscans,gojoscans.com,en,répertoire 200 (rang 172),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+gourmetsupremacy,gourmetsupremacy.com,en,répertoire 200 (rang 173),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+grimscans,grimscans.com,en,répertoire 200 (rang 174),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+hachirumi,hachirumi.com,en,répertoire 200 (rang 175),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+hadesscans,hadesscans.com,en,répertoire 200 (rang 176),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+hiveworkscomics,hiveworkscomics.com,en,répertoire 200 (rang 177),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+hunlightcomics,hunlightcomics.com,en,répertoire 200 (rang 178),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+hyakuro,hyakuro.net,en,répertoire 200 (rang 179),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+infinityscans,infinityscans.org,en,répertoire 200 (rang 180),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+isekaiscan,isekaiscan.top,en,répertoire 200 (rang 181),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+jinmangas,jinmangas.com,en,répertoire 200 (rang 182),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kaliscan,kaliscan.com,en,répertoire 200 (rang 183),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kaynscans,kaynscans.com,en,répertoire 200 (rang 184),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kencomics,kencomics.com,en,répertoire 200 (rang 185),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kewnscans,kewnscans.org,en,répertoire 200 (rang 186),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kissmanga,kissmanga.in,en,répertoire 200 (rang 188),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kokomangas,kokomangas.com,en,répertoire 200 (rang 189),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+ksgroupscans,ksgroupscans.com,en,répertoire 200 (rang 190),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kunmanga,kunmanga.online,en,répertoire 200 (rang 191),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+kuramanga,kuramanga.com,en,répertoire 200 (rang 192),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lagoonscans,lagoonscans.com,en,répertoire 200 (rang 193),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lhtranslation,lhtranslation.net,en,répertoire 200 (rang 194),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+likemanga,likemanga.ink,en,répertoire 200 (rang 195),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lilymanga,lilymanga.net,en,répertoire 200 (rang 196),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+linkmanga,linkmanga.com,en,répertoire 200 (rang 197),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+luacomic,luacomic.org,en,répertoire 200 (rang 198),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+luminaretranslations,luminaretranslations.com,en,répertoire 200 (rang 199),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+lunatoons,lunatoons.org,en,répertoire 200 (rang 200),—,UNVERIFIED,Adresse de répertoire : aucun connecteur de pages. Statut déclaré dans la liste d’origine : Non confirmé.
+Manga UP!,manga-up.com,en/ja,plateforme officielle,—,"SUBSCRIPTION_REQUIRED (a priori, non vérifié)",Chapitres gratuits temporaires puis payants (« n’est plus gratuit »). Pas d’API publique documentée : aucune extraction ; la page de restriction est détectée (Test B).
+K MANGA,kmanga.kodansha.com,en,plateforme officielle,—,"SUBSCRIPTION_REQUIRED / LOGIN_REQUIRED (a priori, non vérifié)","Points, connexion et vérification d’âge selon les titres : détectés, jamais contournés (Test C)."
+MANGA Plus,mangaplus.shueisha.co.jp,en/fr,plateforme officielle,—,EXTERNAL_ONLY (politique),Liens « externalUrl » de MangaDex : jamais traités comme des pages.

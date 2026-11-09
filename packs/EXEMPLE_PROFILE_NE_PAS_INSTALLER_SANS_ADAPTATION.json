@@ -1,0 +1,20 @@
+{
+  "format": "pazulu-source-recipes",
+  "schemaVersion": 1,
+  "recipes": [
+    {
+      "id": "manhwaclan",
+      "version": 2,
+      "mode": "inspect",
+      "selectors": [
+        ".lecteur-personnalise img",
+        ".reading-content img",
+        "#readerarea img"
+      ],
+      "minimumWidth": 360,
+      "minimumHeight": 450,
+      "hostAliases": [],
+      "homeOverride": null
+    }
+  ]
+}

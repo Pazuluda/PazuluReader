@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "minimumEngineVersion": "2.0.0",
+  "id": "pazulu.peppercarrot",
+  "name": "Pepper&Carrot",
+  "version": "2.0.0",
+  "languages": [
+    "fr",
+    "en"
+  ],
+  "contentTypes": [
+    "comic"
+  ],
+  "hosts": [
+    "www.peppercarrot.com",
+    "peppercarrot.com"
+  ],
+  "capabilities": {
+    "search": true,
+    "chapters": true,
+    "pages": true,
+    "latest": false
+  },
+  "transport": "native",
+  "nativeAdapter": "peppercarrot",
+  "paginationMode": "vertical",
+  "readingDirection": "ltr",
+  "imageMode": "direct",
+  "rateLimit": {
+    "requestsPerMinute": 30,
+    "maxConcurrent": 1
+  },
+  "validation": "VERIFIED_FIXTURE_ONLY",
+  "tests": [
+    {
+      "kind": "search",
+      "query": "Pepper"
+    }
+  ],
+  "notes": "Webcomic libre (CC BY 4.0)."
+}

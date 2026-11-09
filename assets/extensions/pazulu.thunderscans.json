@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "minimumEngineVersion": "2.0.0",
+  "id": "pazulu.thunderscans",
+  "name": "EN-ThunderScans",
+  "version": "1.0.0",
+  "languages": [
+    "en"
+  ],
+  "contentTypes": [
+    "manhwa",
+    "manhua"
+  ],
+  "hosts": [
+    "en-thunderscans.com"
+  ],
+  "capabilities": {
+    "search": true,
+    "chapters": true,
+    "pages": true,
+    "latest": true
+  },
+  "transport": "browser",
+  "html": {
+    "family": "mangathemesia"
+  },
+  "paginationMode": "vertical",
+  "readingDirection": "vertical",
+  "imageMode": "referer",
+  "rateLimit": {
+    "requestsPerMinute": 20,
+    "maxConcurrent": 1
+  },
+  "validation": "IMPLEMENTED_UNTESTED",
+  "enabledByDefault": false,
+  "notes": "Profil famille MangaThemesia (ts_reader) avec repli WebView2 invisible. Non testé en réel."
+}

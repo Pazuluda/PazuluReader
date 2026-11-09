@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "minimumEngineVersion": "2.0.0",
+  "id": "pazulu.sushiscan",
+  "name": "SushiScan.net",
+  "version": "2.0.0",
+  "languages": [
+    "fr"
+  ],
+  "contentTypes": [
+    "manga",
+    "manhwa"
+  ],
+  "hosts": [
+    "sushiscan.net"
+  ],
+  "capabilities": {
+    "search": true,
+    "chapters": true,
+    "pages": true,
+    "latest": true
+  },
+  "transport": "native",
+  "nativeAdapter": "sushiscan_net",
+  "paginationMode": "auto",
+  "readingDirection": "auto",
+  "imageMode": "referer",
+  "rateLimit": {
+    "requestsPerMinute": 20,
+    "maxConcurrent": 1
+  },
+  "validation": "VERIFIED_FIXTURE_ONLY",
+  "tests": [
+    {
+      "kind": "search",
+      "query": "Solo Leveling"
+    }
+  ],
+  "notes": "Lit d'abord la liste ts_reader du HTML public ; sinon rendu WebView2 invisible page par page. Aucun contournement de protection."
+}

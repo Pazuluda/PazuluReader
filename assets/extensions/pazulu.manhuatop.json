@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "minimumEngineVersion": "2.0.0",
+  "id": "pazulu.manhuatop",
+  "name": "ManhuaTop",
+  "version": "1.0.0",
+  "languages": [
+    "en"
+  ],
+  "contentTypes": [
+    "manhua",
+    "manhwa"
+  ],
+  "hosts": [
+    "manhuatop.org"
+  ],
+  "capabilities": {
+    "search": true,
+    "chapters": true,
+    "pages": true,
+    "latest": true
+  },
+  "transport": "html",
+  "html": {
+    "family": "madara"
+  },
+  "paginationMode": "vertical",
+  "readingDirection": "vertical",
+  "imageMode": "referer",
+  "rateLimit": {
+    "requestsPerMinute": 20,
+    "maxConcurrent": 1
+  },
+  "validation": "IMPLEMENTED_UNTESTED",
+  "enabledByDefault": false,
+  "notes": "Profil famille Madara. Non testé en réel."
+}
