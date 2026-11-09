@@ -21,8 +21,8 @@ Windows 10/11 64 bits. Le lecteur intégré utilise WebView2 (déjà présent su
 ## Publier une version
 
 1. Mettre le même numéro dans `lib/core/app_state.dart` (`appVersion`) et `pubspec.yaml`.
-2. Sur GitHub : **Releases → Draft a new release → tag `vX.Y.Z`** → **Publish release**.
-3. Le workflow `Release Windows` compile l'`.exe` et le `.zip` et les ajoute à la release (≈10 min).
+2. Fusionner dans `main`. C'est tout : le workflow `Release Windows` voit que cette version n'a pas
+   encore de release, compile l'`.exe` et le `.zip`, crée le tag `vX.Y.Z` et publie la release (≈10 min).
    Les applications installées proposent la mise à jour à leur prochain lancement.
 
 ## Compiler soi-même

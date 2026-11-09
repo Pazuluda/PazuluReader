@@ -1,5 +1,7 @@
 # Compile Pazulu Reader pour Windows et publie la release GitHub.
-# Se lance quand un tag « vX.Y.Z » est créé (bouton « Publish release » sur GitHub).
+# Se lance tout seul à chaque fusion dans main : si la version du code
+# (appVersion) n'a pas encore de release, le tag vX.Y.Z et la release sont créés.
+# Marche aussi avec un tag « vX.Y.Z » posé à la main.
 # Fichiers publiés :
 #  - PazuluReader-X.Y.Z-setup.exe   : installateur (sans droits administrateur)
 #  - PazuluReader-X.Y.Z-windows.zip : version portable, utilisée par le bouton de mise à jour de l'app
@@ -7,6 +9,7 @@ name: Release Windows
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
@@ -19,24 +22,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Version du tag
+      - name: Version
         id: v
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = '${{ github.ref_name }}'
-          $version = $tag.TrimStart('v')
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = (Select-String -Path pubspec.yaml -Pattern '^version: (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value }
           $app = (Select-String -Path lib/core/app_state.dart -Pattern "appVersion = '([^']+)'").Matches[0].Groups[1].Value
-          if ($app -ne $version) { throw "Le tag ($version) et appVersion ($app) ne correspondent pas : corrige lib/core/app_state.dart." }
-          "version=$version" >> $env:GITHUB_OUTPUT
+          $pub = (Select-String -Path pubspec.yaml -Pattern '^version: (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value
+          if ($app -ne $pub) { throw "appVersion ($app) et pubspec.yaml ($pub) ne correspondent pas." }
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $tagv = '${{ github.ref_name }}'.TrimStart('v')
+            if ($tagv -ne $app) { throw "Le tag ($tagv) et appVersion ($app) ne correspondent pas." }
+          }
+          # Fusion dans main : rien à faire si cette version est déjà publiée.
+          gh release view "v$app" --repo '${{ github.repository }}' *> $null
+          $exists = ($LASTEXITCODE -eq 0)
+          $global:LASTEXITCODE = 0
+          $skip = ('${{ github.ref_type }}' -ne 'tag') -and $exists
+          if ($skip) { Write-Host "v$app est déjà publiée : rien à faire." }
+          "version=$app" >> $env:GITHUB_OUTPUT
+          "skip=$($skip.ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
       - uses: subosito/flutter-action@v2
+        if: steps.v.outputs.skip != 'true'
         with:
           channel: stable
           flutter-version: '3.47.9'
           cache: true
 
       - name: Projet Windows
+        if: steps.v.outputs.skip != 'true'
         shell: pwsh
         run: |
           flutter config --enable-windows-desktop
@@ -45,15 +61,19 @@ jobs:
           ./tools/configure_platforms.ps1
 
       - name: Dépendances
+        if: steps.v.outputs.skip != 'true'
         run: flutter pub get
 
       - name: Tests
+        if: steps.v.outputs.skip != 'true'
         run: flutter test
 
       - name: Compilation
+        if: steps.v.outputs.skip != 'true'
         run: flutter build windows --release
 
       - name: ZIP portable
+        if: steps.v.outputs.skip != 'true'
         shell: pwsh
         run: |
           $v = '${{ steps.v.outputs.version }}'
@@ -62,6 +82,7 @@ jobs:
           Compress-Archive -Path "dist/PazuluReader-$v-windows/*" -DestinationPath "dist/PazuluReader-$v-windows.zip"
 
       - name: Installateur .exe
+        if: steps.v.outputs.skip != 'true'
         shell: pwsh
         run: |
           $v = '${{ steps.v.outputs.version }}'
@@ -72,10 +93,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Inno Setup a échoué' }
 
       - name: Publication
+        if: steps.v.outputs.skip != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ steps.v.outputs.version }}
+          target_commitish: ${{ github.sha }}
           name: Pazulu Reader ${{ steps.v.outputs.version }}
+          make_latest: true
           files: |
             dist/PazuluReader-${{ steps.v.outputs.version }}-setup.exe
             dist/PazuluReader-${{ steps.v.outputs.version }}-windows.zip
