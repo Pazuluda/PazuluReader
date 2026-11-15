@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.4.1';
+const String appVersion = '1.4.2';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -1803,9 +1803,33 @@ class AppState extends ChangeNotifier {
         ...bySaved.values,
       ];
     }
+    // Vote between ALL the lists (connectors and saved copies vote too, but
+    // are never rejected): a minority far above the others is another work
+    // of the same name (a novel, a fan series).
+    final byList = <String, List<SourceChapter>>{
+      for (final pair in successful.entries)
+        if (!ListingGuard.looksMixed(pair.value)) pair.key: pair.value,
+    };
+    for (final c in saved) {
+      if (!successful.containsKey(c.sourceId)) byList.putIfAbsent('saved:${c.sourceId}', () => []).add(c);
+    }
+    // A site that did not answer this time is judged on its previous list.
+    for (final c in previous) {
+      if (failed.contains(c.sourceId) && !successful.containsKey(c.sourceId)) {
+        byList.putIfAbsent(c.sourceId, () => []).add(c);
+      }
+    }
+    final minority = ListingGuard.minorityLevels(byList,
+        siteOf: (id) => (sources.byId(id)?.name ?? id).toLowerCase(),
+        protect: {
+          ...origin,
+          for (final id in byList.keys)
+            if (id.startsWith('saved:') || exactSeries(id)) id,
+        });
     for (final pair in successful.entries.toList()) {
       if (exactSeries(pair.key)) continue;
       final reason = ListingGuard.rejectReason(pair.value, peersOf(pair.key)) ??
+          minority[pair.key] ??
           (origin.contains(pair.key)
               ? null
               : ListingGuard.farBeyondAllPeers(pair.value, otherLists(pair.key)));
@@ -1824,7 +1848,7 @@ class AppState extends ChangeNotifier {
     for (final id in failed) {
       if (origin.contains(id) || exactSeries(id)) continue;
       final stale = previous.where((c) => c.sourceId == id).toList();
-      final reason = ListingGuard.rejectReason(stale, peersOf(id));
+      final reason = ListingGuard.rejectReason(stale, peersOf(id)) ?? minority[id];
       if (reason != null) rejected[id] = reason;
     }
     if (rejected.isNotEmpty || badDownloads.isNotEmpty) {
