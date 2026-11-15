@@ -110,6 +110,9 @@ void main() {
     test('titre nettoyé', () {
       expect(titleFromBookmark('Solo Leveling - Chapitre 120 - Lecture'), 'Solo Leveling');
       expect(titleFromBookmark('Omniscient Reader Chapter 201 | Autre'), 'Omniscient Reader');
+      expect(cleanImportedTitle("Reincarnator's Stream »"), "Reincarnator's Stream");
+      expect(cleanImportedTitle('Level Up With Skills »'), 'Level Up With Skills');
+      expect(cleanImportedTitle('Solo Leveling'), 'Solo Leveling');
     });
   });
 }

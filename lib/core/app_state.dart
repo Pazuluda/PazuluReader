@@ -62,7 +62,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.2.0';
+const String appVersion = '1.2.1';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -495,6 +495,9 @@ class AppState extends ChangeNotifier {
     // Whole library: works whose chapter list has holes or stops before
     // the announced last chapter get other readers, quietly, one by one.
     Timer(const Duration(seconds: 45), () => unawaited(repairLibraryCoverage()));
+    // Works without a cover (imported from bookmarks…): their fiche is
+    // completed from AniList (metadata only).
+    Timer(const Duration(seconds: 25), () => unawaited(enrichLibraryMetadata()));
     // Achievements already earned by the existing library.
     Timer(const Duration(seconds: 3), _checkAchievements);
     // The week's planning is prepared quietly: the tab opens instantly.
@@ -1326,6 +1329,7 @@ class AppState extends ChangeNotifier {
   Future<void> warmUp({void Function(String step)? onStep}) async {
     if (!ready) return;
     // New versions are looked for at once, not after the warm-up.
+    await _checkFailedInstall();
     _scheduleUpdateChecks();
     await _indexLoading;
     // No catalogue indexed yet = first full loading (up to ~5 min).
@@ -2616,6 +2620,78 @@ class AppState extends ChangeNotifier {
 
   bool inLibrary(String workId) => _data.entries.containsKey(workId);
 
+  bool _enriching = false;
+
+  /// Library works without a cover (imported from bookmarks, created by
+  /// hand…) are compared with the AniList catalogue: when the same work is
+  /// found (same title or alias), its cover address, summary, genres,
+  /// status, authors and other titles are added. The work keeps its id,
+  /// its sites and its progress. Metadata only: the cover is shown like
+  /// any other library cover. Each work is tried once a week.
+  Future<int> enrichLibraryMetadata({int max = 80}) async {
+    if (_enriching) return 0;
+    _enriching = true;
+    var done = 0;
+    try {
+      final todo = [
+        for (final e in entries)
+          if (e.work.type != ContentType.anime &&
+              (e.work.coverUrl == null || e.work.coverUrl!.isEmpty) &&
+              (_metaTriedAt[e.work.id] == null ||
+                  DateTime.now().difference(_metaTriedAt[e.work.id]!) > const Duration(days: 7)))
+            e,
+      ].take(max).toList();
+      for (final e in todo) {
+        if (_disposed) break;
+        await _breathe();
+        _metaTriedAt[e.work.id] = DateTime.now();
+        final clean = cleanImportedTitle(e.work.title);
+        try {
+          final hits = await anilist.comicCatalog(search: clean, perPage: 6, sort: 'SEARCH_MATCH')
+              .timeout(const Duration(seconds: 12));
+          final probe = WorkInfo(id: e.work.id, title: clean, altTitles: e.work.altTitles);
+          final match = hits.where((w) => sameWorkAcrossSources(probe, w)).firstOrNull;
+          if (match == null) {
+            if (clean != e.work.title) {
+              e.work = WorkInfo.fromJson({...e.work.toJson(), 'title': clean});
+              _changed();
+            }
+            continue;
+          }
+          final old = e.work;
+          e.work = WorkInfo.fromJson({
+            ...old.toJson(),
+            'title': clean,
+            'coverUrl': match.coverUrl,
+            if (old.description.isEmpty) 'description': match.description,
+            'type': (old.type == ContentType.other ? match.type : old.type).name,
+            'publicationStatus': old.publicationStatus ?? match.publicationStatus,
+            'tags': {...old.tags, ...match.tags}.toList(),
+            'year': old.year ?? match.year,
+            'authors': old.authors.isEmpty ? match.authors : old.authors,
+            'altTitles': {...old.altTitles, if (match.title != clean) match.title, ...match.altTitles}
+                .where((t) => t != clean).take(16).toList(),
+            'lastChapter': _maxChapter(old.lastChapter, match.lastChapter),
+          });
+          if (match.publicationStatus != null) {
+            _recordStatusVote(e.work.id, 'AniList', match.publicationStatus!);
+          }
+          done++;
+          _changed();
+        } catch (err) {
+          AppLog.info('Fiche AniList non trouvée pour ${e.work.title} : $err');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+      }
+      if (done > 0) AppLog.info('Fiches complétées (image, résumé, genres) : $done');
+    } finally {
+      _enriching = false;
+    }
+    return done;
+  }
+
+  final Map<String, DateTime> _metaTriedAt = {};
+
   /// Imports the readings found in a browser bookmarks export (HTML file
   /// chosen by the user): each series is added to the library with every
   /// site that has it, and the chapter of the bookmark becomes the reading
@@ -2679,7 +2755,12 @@ class AppState extends ChangeNotifier {
       entry.updatedAt = DateTime.now();
       positioned++;
     }
-    if (readings.isNotEmpty) _changed();
+    if (readings.isNotEmpty) {
+      _changed();
+      // Cover, summary, genres, status: compared with the AniList catalogue
+      // right away, the library fills in as the answers arrive.
+      unawaited(enrichLibraryMetadata());
+    }
     AppLog.info('Import des favoris : ${marks.length} liens, ${readings.length} lectures, '
         '$added ajoutées, $updated déjà présentes, $positioned positions de lecture.');
     return BookmarkImportReport(
@@ -2797,10 +2878,30 @@ class AppState extends ChangeNotifier {
   /// (Pazulu restarts by itself). Nothing happens when already up to date.
   Future<void> updateNow() async {
     if (updateProgress != null) return;
+    // The last attempt failed (Pazulu restarted in the old version): no new
+    // download on its own, the « Réessayer » button stays available.
+    if (updateFailedVersion != null) {
+      if (availableUpdate == null) await checkForAppUpdate();
+      return;
+    }
     if (availableUpdate == null) {
       await checkForAppUpdate();
     }
     if (availableUpdate != null) await installAppUpdate();
+  }
+
+  /// Version whose install failed at the last restart (shown with the
+  /// error; one press on « Réessayer » tries again).
+  String? updateFailedVersion;
+
+  Future<void> _checkFailedInstall() async {
+    final failed = await AppUpdater.failedInstall(appVersion);
+    if (failed == null) return;
+    updateFailedVersion = failed.$1;
+    updateError = 'La mise à jour vers ${failed.$1} ne s\'est pas installée. '
+        'Réessaie, ou installe PazuluReader-${failed.$1}-setup.exe depuis GitHub.';
+    AppLog.info('Mise à jour ${failed.$1} non installée.\n${failed.$2}');
+    notifyListeners();
   }
 
   /// Downloads the new version, saves everything, starts the installer and
@@ -2810,10 +2911,12 @@ class AppState extends ChangeNotifier {
     if (info == null || updateProgress != null) return;
     updateProgress = 0;
     updateError = null;
+    updateFailedVersion = null;
     notifyListeners();
     var lastNotify = DateTime(2000);
+    final useSetup = AppUpdater.installedWithSetup() && info.setupUrl != null;
     try {
-      final zip = await _updater.download(info, onProgress: (v) {
+      final zip = await _updater.download(info, useSetup: useSetup, onProgress: (v) {
         updateProgress = v;
         final now = DateTime.now();
         if (now.difference(lastNotify) > const Duration(milliseconds: 150)) {
@@ -2825,7 +2928,12 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       AppLog.info('Mise à jour ${info.version} téléchargée, installation…');
       await flush();
-      await _updater.launchInstaller(zip);
+      await AppUpdater.markPending(info.version);
+      if (useSetup) {
+        await _updater.launchSetup(zip);
+      } else {
+        await _updater.launchInstaller(zip);
+      }
       exit(0);
     } catch (e) {
       updateProgress = null;
