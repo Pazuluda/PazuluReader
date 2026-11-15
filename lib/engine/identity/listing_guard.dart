@@ -163,6 +163,80 @@ class ListingGuard {
     return null;
   }
 
+  /// Vote between the sites of each language when they disagree on how
+  /// far the series goes. [lists]: one entry per source, [siteOf] the site
+  /// a source belongs to (the same site attached twice votes once).
+  ///
+  /// The sites are grouped by level (same last chapter, within 15 %). A
+  /// group far above the level of the largest group (more than 1.3 × + 15)
+  /// is another work of the same name (the NOVEL « Solo Leveling:
+  /// Ragnarok », ~200 chapters, on 2 sites, while 4 sites have the 72–75
+  /// chapters of the webtoon), when the largest group is current (a chapter
+  /// dated in the last 30 days) or, without dates, at least twice as big.
+  /// Returns the rejected source → reason. [protect]ed sources (opened by
+  /// the user, connectors reading one series by id) vote but are never
+  /// rejected.
+  static Map<String, String> minorityLevels(Map<String, List<SourceChapter>> lists,
+      {required String Function(String sourceId) siteOf, Set<String> protect = const {},
+      DateTime? now}) {
+    final at = now ?? DateTime.now();
+    final out = <String, String>{};
+    final langs = <String>{for (final l in lists.values) for (final c in l) c.lang};
+    for (final lang in langs) {
+      // site → (max, newest date, sources)
+      final bySite = <String, (double, DateTime?, Set<String>)>{};
+      for (final e in lists.entries) {
+        final nums = <double>{};
+        DateTime? newest;
+        for (final c in e.value) {
+          final n = c.key.number;
+          if (c.lang != lang || c.isExternal || n == null || n < 1) continue;
+          nums.add(n);
+          final d = c.publishedAt;
+          if (d != null && (newest == null || d.isAfter(newest))) newest = d;
+        }
+        if (nums.length < 10) continue;
+        final max = nums.reduce((a, b) => a > b ? a : b);
+        final site = siteOf(e.key);
+        final old = bySite[site];
+        bySite[site] = (
+          old == null || max > old.$1 ? max : old.$1,
+          old?.$2 == null || (newest != null && newest.isAfter(old!.$2!)) ? newest : old.$2,
+          {...?old?.$3, e.key},
+        );
+      }
+      if (bySite.length < 4) continue;
+      bool sameLevel(double a, double b) => (a - b).abs() <= (a > b ? a : b) * 0.15 + 5;
+      final sites = bySite.entries.toList();
+      int support(double m) => sites.where((s) => sameLevel(s.value.$1, m)).length;
+      // Largest group; on a tie, the lower level (fewer false chapters).
+      var ref = sites.first;
+      for (final s in sites) {
+        final a = support(s.value.$1), b = support(ref.value.$1);
+        if (a > b || (a == b && s.value.$1 < ref.value.$1)) ref = s;
+      }
+      final refMax = ref.value.$1;
+      final refSupport = support(refMax);
+      final refCurrent = sites.any((s) =>
+          sameLevel(s.value.$1, refMax) && s.value.$2 != null &&
+          at.difference(s.value.$2!) <= const Duration(days: 30));
+      for (final s in sites) {
+        final m = s.value.$1;
+        if (m <= refMax * 1.3 + 15) continue;
+        final mine = support(m);
+        if (mine >= refSupport) continue;
+        if (!refCurrent && refSupport < mine * 2) continue;
+        for (final id in s.value.$3) {
+          if (protect.contains(id)) continue;
+          out[id] = 'chapitre ${_fmt(m)} ($lang) alors que $refSupport sites '
+              '${refCurrent ? 'à jour ' : ''}s\'arrêtent vers le ${_fmt(refMax)} '
+              '(seulement $mine site(s) à ce niveau) : autre œuvre du même nom';
+        }
+      }
+    }
+    return out;
+  }
+
   /// Why [candidate] (a web site's chapters) cannot be the same work as the
   /// trusted [reference] chapters (API connectors, local copies), or null.
   static String? rejectReason(List<SourceChapter> candidate, List<SourceChapter> reference,

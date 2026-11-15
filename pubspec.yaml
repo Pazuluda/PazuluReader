@@ -1,7 +1,7 @@
 name: pazulu_reader
 description: Pazulu Reader - lecture, suivi et organisation de mangas, manhwas, manhuas et animes.
 publish_to: 'none'
-version: 1.4.1+141
+version: 1.4.2+142
 
 environment:
   sdk: ^3.6.0
