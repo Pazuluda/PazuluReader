@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.3.2';
+const String appVersion = '1.3.3';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -2724,6 +2724,30 @@ class AppState extends ChangeNotifier {
 
   bool _enriching = false;
 
+  /// Cover addresses that did not load (reported by the screen).
+  final Set<String> _brokenCovers = {};
+  Timer? _brokenTimer;
+
+  /// A library cover does not load: the work's cover is looked for on
+  /// AniList / MangaDex a few seconds later (several reports, one pass).
+  void coverFailed(String url) {
+    if (!_brokenCovers.add(url)) return;
+    if (!entries.any((e) => e.work.coverUrl == url)) return;
+    if (_enriching) {
+      _enrichAgain = true;
+      return;
+    }
+    _brokenTimer?.cancel();
+    _brokenTimer = Timer(const Duration(seconds: 3), () => unawaited(enrichLibraryMetadata()));
+  }
+
+  bool _enrichAgain = false;
+
+  bool _needsCover(LibraryEntry e) {
+    final c = e.work.coverUrl;
+    return c == null || c.isEmpty || _brokenCovers.contains(c);
+  }
+
   /// Library works without a cover (imported from bookmarks, created by
   /// hand…) are compared with the AniList catalogue: when the same work is
   /// found (same title or alias), its cover address, summary, genres,
@@ -2737,10 +2761,9 @@ class AppState extends ChangeNotifier {
     try {
       final todo = [
         for (final e in entries)
-          if (e.work.type != ContentType.anime &&
-              (e.work.coverUrl == null || e.work.coverUrl!.isEmpty) &&
-              (_metaTriedAt[e.work.id] == null ||
-                  DateTime.now().difference(_metaTriedAt[e.work.id]!) > const Duration(days: 7)))
+          if (e.work.type != ContentType.anime && _needsCover(e) &&
+              (_metaTriedAt[_metaKey(e)] == null ||
+                  DateTime.now().difference(_metaTriedAt[_metaKey(e)]!) > const Duration(days: 7)))
             e,
       ].take(max).toList();
       for (final e in todo) {
@@ -2754,8 +2777,23 @@ class AppState extends ChangeNotifier {
           final hits = await anilist.comicCatalog(search: clean, perPage: 8, sort: 'SEARCH_MATCH')
               .timeout(const Duration(seconds: 15));
           // Answer received: not asked again before a week (kept on disk).
-          _metaTriedAt[e.work.id] = DateTime.now();
-          final match = sameMetadataWork(clean, e.work.altTitles, hits, truncated: truncated);
+          _metaTriedAt[_metaKey(e)] = DateTime.now();
+          var match = sameMetadataWork(clean, e.work.altTitles, hits, truncated: truncated);
+          // Not on AniList (or without a cover there): MangaDex, which
+          // lists many webtoons AniList does not have.
+          if (match == null || match.coverUrl == null) {
+            try {
+              final md = await _mangadex.search(clean, limit: 10).timeout(const Duration(seconds: 12));
+              final other = sameMetadataWork(clean, e.work.altTitles, md, truncated: truncated);
+              if (other != null && other.coverUrl != null) {
+                match = match == null
+                    ? other
+                    : WorkInfo.fromJson({...match.toJson(), 'coverUrl': other.coverUrl});
+              }
+            } catch (_) {
+              // MangaDex busy: next pass.
+            }
+          }
           if (match == null) {
             if (clean != e.work.title) {
               e.work = WorkInfo.fromJson({...e.work.toJson(), 'title': clean});
@@ -2767,7 +2805,7 @@ class AppState extends ChangeNotifier {
           e.work = WorkInfo.fromJson({
             ...old.toJson(),
             'title': clean,
-            'coverUrl': match.coverUrl,
+            'coverUrl': match.coverUrl ?? old.coverUrl,
             if (old.description.isEmpty) 'description': match.description,
             'type': (old.type == ContentType.other ? match.type : old.type).name,
             'publicationStatus': old.publicationStatus ?? match.publicationStatus,
@@ -2793,6 +2831,10 @@ class AppState extends ChangeNotifier {
       unawaited(_saveLocatedReaders());
     } finally {
       _enriching = false;
+      if (_enrichAgain && !_disposed) {
+        _enrichAgain = false;
+        _brokenTimer = Timer(const Duration(seconds: 3), () => unawaited(enrichLibraryMetadata()));
+      }
     }
     return done;
   }
@@ -2822,6 +2864,10 @@ class AppState extends ChangeNotifier {
   }
 
   final Map<String, DateTime> _metaTriedAt = {};
+
+  /// One try per cover address (a new broken address is tried again; the
+  /// « v2 » ignores the tries of 1.2/1.3 made without MangaDex).
+  String _metaKey(LibraryEntry e) => 'v2:${e.work.id}:${e.work.coverUrl ?? ''}';
 
   /// Imports the readings found in a browser bookmarks export (HTML file
   /// chosen by the user): each series is added to the library with every
@@ -3929,6 +3975,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _brokenTimer?.cancel();
     _trailingNotify?.cancel();
     _quietNotify?.cancel();
     engine.dispose();

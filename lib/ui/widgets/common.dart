@@ -14,6 +14,11 @@ import 'motion.dart';
 class CoverImage extends StatelessWidget {
   const CoverImage({super.key, required this.url, this.radius = PazuluRadius.card, this.ratio = 2 / 3});
 
+  /// Told when a cover address does not load even after a new attempt
+  /// (site refusing its images outside its pages, dead link…): the app then
+  /// looks for the work's cover elsewhere (AniList, MangaDex).
+  static void Function(String url)? onBroken;
+
   final String? url;
   final double radius;
   final double ratio;
@@ -83,6 +88,7 @@ class _NetworkCover extends StatefulWidget {
 
 class _NetworkCoverState extends State<_NetworkCover> {
   int _attempt = 0;
+  bool _reported = false;
   Timer? _retry;
 
   @override
@@ -90,7 +96,9 @@ class _NetworkCoverState extends State<_NetworkCover> {
     super.didUpdateWidget(old);
     if (old.url != widget.url) {
       _retry?.cancel();
+      _retry = null;
       _attempt = 0;
+      _reported = false;
     }
   }
 
@@ -143,6 +151,9 @@ class _NetworkCoverState extends State<_NetworkCover> {
                         _retry = Timer(const Duration(seconds: 4), () {
                           if (mounted) setState(() => _attempt = 1);
                         });
+                      } else if (_attempt >= 1 && !_reported) {
+                        _reported = true;
+                        CoverImage.onBroken?.call(u);
                       }
                       return fallback;
                     },
