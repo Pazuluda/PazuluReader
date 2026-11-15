@@ -29,6 +29,7 @@ import 'bookmarks_import.dart';
 import 'coverage.dart';
 import 'device_profile.dart';
 import 'host_gate.dart';
+import 'library_insights.dart';
 import 'moments.dart';
 import 'language_consensus.dart';
 import 'app_update.dart';
@@ -64,7 +65,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.6.0';
+const String appVersion = '1.7.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -447,6 +448,7 @@ class AppState extends ChangeNotifier {
       await _initEngine(dir);
       await _loadLocatedReaders();
       await _loadMoments();
+      await _loadHistory();
       final diagDir = Directory('${dir.path}${Platform.pathSeparator}diagnostics');
       PublicCatalogSource.onDiagnosticPage = (sourceId, kind, url, body) {
         // One file per site and kind (overwritten), 2 MB max.
@@ -2764,6 +2766,190 @@ class AppState extends ChangeNotifier {
 
   bool inLibrary(String workId) => _data.entries.containsKey(workId);
 
+  // ---- Historique de lecture, doublons, pauses ----
+
+  /// Chapitres ouverts, du plus récent au plus ancien (5 000 au plus).
+  final List<HistoryItem> history = [];
+
+  /// Paires de doublons que l'utilisateur a dit « pas la même œuvre ».
+  final Set<String> ignoredDuplicates = {};
+
+  /// Dernière fois que la proposition « mettre en pause » a été écartée.
+  DateTime? pauseHintDismissedAt;
+
+  Timer? _historySave;
+
+  File? get _historyFile => _supportDir == null
+      ? null
+      : File('${_supportDir!.path}${Platform.pathSeparator}history.json');
+
+  Future<void> _loadHistory() async {
+    final f = _historyFile;
+    if (f == null || !await f.exists()) return;
+    try {
+      final raw = jsonDecode(await f.readAsString());
+      if (raw is! Map) return;
+      history
+        ..clear()
+        ..addAll([for (final h in (raw['items'] as List? ?? const [])) HistoryItem.fromJson(h)]
+            .whereType<HistoryItem>());
+      ignoredDuplicates
+        ..clear()
+        ..addAll([for (final d in (raw['ignoredDuplicates'] as List? ?? const [])) '$d']);
+      pauseHintDismissedAt = DateTime.tryParse('${raw['pauseHintDismissedAt']}');
+    } catch (_) {
+      // damaged: starts again
+    }
+  }
+
+  void _saveHistorySoon() {
+    _historySave?.cancel();
+    _historySave = Timer(const Duration(seconds: 3), () async {
+      final f = _historyFile;
+      if (f == null) return;
+      final json = {
+        'items': [for (final h in history) h.toJson()],
+        'ignoredDuplicates': ignoredDuplicates.toList(),
+        if (pauseHintDismissedAt != null) 'pauseHintDismissedAt': pauseHintDismissedAt!.toIso8601String(),
+      };
+      try {
+        final tmp = File('${f.path}.tmp');
+        await tmp.writeAsString(jsonEncode(json), flush: true);
+        if (await f.exists()) await f.delete();
+        await tmp.rename(f.path);
+      } catch (e) {
+        AppLog.info('Historique non enregistré : $e');
+      }
+    });
+  }
+
+  void _addHistory(WorkInfo work, String chapterId) {
+    if (history.isNotEmpty && history.first.workId == work.id && history.first.chapterId == chapterId) return;
+    history.insert(0, HistoryItem(workId: work.id, title: work.title, chapterId: chapterId, at: DateTime.now()));
+    if (history.length > 5000) history.removeRange(5000, history.length);
+    _saveHistorySoon();
+  }
+
+  void _markHistoryFinished(String workId, String chapterId) {
+    for (final h in history.take(50)) {
+      if (h.workId == workId && h.chapterId == chapterId) {
+        h.finished = true;
+        _saveHistorySoon();
+        return;
+      }
+    }
+    history.insert(0, HistoryItem(
+        workId: workId, title: _data.entries[workId]?.work.title ?? '', chapterId: chapterId,
+        at: DateTime.now(), finished: true));
+    _saveHistorySoon();
+  }
+
+  void clearHistory() {
+    history.clear();
+    _saveHistorySoon();
+    notifyListeners();
+  }
+
+  WorkStats statsFor(LibraryEntry e) {
+    final latest = e.latestKnown.values.fold<double?>(null, (a, b) => a == null || b > a ? b : a);
+    return LibraryInsights.statsFor(e, history, latest: latest);
+  }
+
+  /// Lectures en cours pas ouvertes depuis 3 mois (proposition « en pause »,
+  /// pas plus d'une fois par mois si elle a été écartée).
+  List<LibraryEntry> get staleReadings {
+    final d = pauseHintDismissedAt;
+    if (d != null && DateTime.now().difference(d) < const Duration(days: 30)) return const [];
+    return LibraryInsights.stale(entries);
+  }
+
+  void dismissPauseHint() {
+    pauseHintDismissedAt = DateTime.now();
+    _saveHistorySoon();
+    notifyListeners();
+  }
+
+  void pauseAll(Iterable<LibraryEntry> list) {
+    for (final e in list) {
+      e.status = TrackStatus.paused;
+      e.updatedAt = DateTime.now();
+    }
+    _changed();
+  }
+
+  /// Séries terminées (selon toutes les sources) où il reste des chapitres
+  /// à lire, parmi les lectures en cours.
+  List<LibraryEntry> get finishedWithChaptersLeft => [
+        for (final e in entries)
+          if (e.status == TrackStatus.reading &&
+              seriesStatus(e.work).status == SeriesStatus.completed &&
+              unreadCount(e) > 0)
+            e,
+      ];
+
+  List<(LibraryEntry, LibraryEntry)> get duplicateEntries =>
+      LibraryInsights.duplicates(entries, ignored: ignoredDuplicates);
+
+  void ignoreDuplicate(LibraryEntry a, LibraryEntry b) {
+    ignoredDuplicates.add(LibraryInsights.pairId(a.work.id, b.work.id));
+    _saveHistorySoon();
+    notifyListeners();
+  }
+
+  /// Fusionne deux fiches de la même œuvre : tout est gardé (chapitres lus,
+  /// sites, favori, note, étiquettes), la position la plus avancée gagne.
+  void mergeEntries(LibraryEntry keep, LibraryEntry drop) {
+    if (identical(keep, drop)) return;
+    final k = keep.progress, d = drop.progress;
+    k.readKeys.addAll(d.readKeys);
+    final kn = k.lastKey == null ? null : ChapterKey.parse(k.lastKey).number;
+    final dn = d.lastKey == null ? null : ChapterKey.parse(d.lastKey).number;
+    if (dn != null && (kn == null || dn > kn)) {
+      k.lastKey = d.lastKey;
+      k.lastPage = d.lastPage;
+      k.lastLang = d.lastLang;
+      k.lastGroup = d.lastGroup;
+    }
+    if (d.updatedAt != null && (k.updatedAt == null || d.updatedAt!.isAfter(k.updatedAt!))) {
+      k.updatedAt = d.updatedAt;
+    }
+    final seen = <String>{};
+    final links = [
+      for (final l in [...keep.work.links, ...drop.work.links])
+        if (seen.add('${l.sourceId}|${l.workId}')) l,
+    ];
+    keep.work = WorkInfo.fromJson({
+      ...keep.work.toJson(),
+      'links': [for (final l in links) l.toJson()],
+      'altTitles': {...keep.work.altTitles, drop.work.title, ...drop.work.altTitles}
+          .where((t) => t != keep.work.title).take(20).toList(),
+      if (keep.work.coverUrl == null) 'coverUrl': drop.work.coverUrl,
+    });
+    keep.favorite = keep.favorite || drop.favorite;
+    keep.watch = keep.watch || drop.watch;
+    keep.rating ??= drop.rating;
+    keep.tags = {...keep.tags, ...drop.tags}.toList();
+    if (drop.note.isNotEmpty && !keep.note.contains(drop.note)) {
+      keep.note = keep.note.isEmpty ? drop.note : '${keep.note}\n${drop.note}';
+    }
+    for (final e in drop.latestKnown.entries) {
+      final v = keep.latestKnown[e.key];
+      if (v == null || e.value > v) keep.latestKnown[e.key] = e.value;
+    }
+    if (keep.addedAt.isAfter(drop.addedAt)) keep.addedAt = drop.addedAt;
+    for (var i = 0; i < history.length; i++) {
+      final h = history[i];
+      if (h.workId == drop.work.id) {
+        history[i] = HistoryItem(workId: keep.work.id, title: keep.work.title,
+            chapterId: h.chapterId, at: h.at, finished: h.finished);
+      }
+    }
+    _saveHistorySoon();
+    keep.updatedAt = DateTime.now();
+    removeFromLibrary(drop.work.id);
+    _changed();
+  }
+
   // ---- Mes moments (pages marquées dans le lecteur) ----
 
   final List<Moment> moments = [];
@@ -3282,12 +3468,14 @@ class AppState extends ChangeNotifier {
   }) {
     final e = _data.entries[work.id] ?? addToLibrary(work, status: TrackStatus.reading);
     final p = e.progress;
+    if (p.lastKey != key.id) _addHistory(work, key.id);
     p.lastKey = key.id;
     p.lastPage = page;
     p.lastLang = variant.lang;
     p.lastGroup = variant.group;
     p.updatedAt = DateTime.now();
     if (pageCount > 0 && page >= pageCount - 1 && p.readKeys.add(key.id)) {
+      _markHistoryFinished(work.id, key.id);
       _logActivity(chapters: 1);
       _checkAchievements();
     }
