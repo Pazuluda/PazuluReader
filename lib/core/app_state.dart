@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -62,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.2.1';
+const String appVersion = '1.3.1';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -156,8 +157,23 @@ class AppState extends ChangeNotifier {
     while (!_active && !_disposed) {
       await Future<void>.delayed(const Duration(seconds: 2));
     }
+    // Light mode (modest PC): background work steps aside while the user
+    // scrolls, clicks or types, and resumes 4 s after the last action.
+    while (DeviceProfile.light && !_disposed && !_splashWork &&
+        DateTime.now().difference(_userActiveAt) < const Duration(seconds: 4)) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
     if (reading) await Future<void>.delayed(const Duration(milliseconds: 400));
   }
+
+  DateTime _userActiveAt = DateTime(2000);
+
+  /// Called on every click, scroll or key press (main.dart).
+  void touch() => _userActiveAt = DateTime.now();
+
+  /// The start-up update runs on the splash screen (light mode): nobody is
+  /// using the app yet, no need to step aside.
+  bool _splashWork = false;
 
   bool _disposed = false;
 
@@ -696,10 +712,19 @@ class AppState extends ChangeNotifier {
     return updatedSite.toCatalogSite();
   }
 
+  DateTime _lastSave = DateTime(2000);
+
+  /// Saves 1 s after the last change, and at least every 8 s while changes
+  /// keep coming (background refresh): no endless re-writing of a big
+  /// library, nothing lost either.
   void _changed() {
     notifyListeners();
     _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 600), _saveNow);
+    final overdue = DateTime.now().difference(_lastSave) > const Duration(seconds: 8);
+    _saveTimer = Timer(overdue ? const Duration(milliseconds: 200) : const Duration(seconds: 1), () {
+      _lastSave = DateTime.now();
+      unawaited(_saveNow());
+    });
   }
 
   Future<void> _saveNow() async {
@@ -1084,6 +1109,13 @@ class AppState extends ChangeNotifier {
           }
         }
       }
+      final metaTried = raw['metaTried'];
+      if (metaTried is Map) {
+        for (final e in metaTried.entries) {
+          final d = DateTime.tryParse('${e.value}');
+          if (d != null) _metaTriedAt['${e.key}'] = d;
+        }
+      }
       final checked = raw['statusChecked'];
       if (checked is Map) {
         for (final e in checked.entries) {
@@ -1326,7 +1358,20 @@ class AppState extends ChangeNotifier {
   /// first launch = everything (releases + chapter lists of the library);
   /// after a few hours away = the same, shorter thanks to the cache;
   /// otherwise nothing (instant start). The rest refreshes in background.
-  Future<void> warmUp({void Function(String step)? onStep}) async {
+  /// [onSplash]: run while the splash screen is shown (light mode). The
+  /// library's chapters are refreshed there in one go (at most 45 s, lists
+  /// less than 12 h old kept as they are); the sites' catalogues are only
+  /// read there the very first time, otherwise later when the app is idle.
+  Future<void> warmUp({void Function(String step)? onStep, bool onSplash = false}) async {
+    _splashWork = onSplash;
+    try {
+      await _warmUp(onStep: onStep, onSplash: onSplash);
+    } finally {
+      _splashWork = false;
+    }
+  }
+
+  Future<void> _warmUp({void Function(String step)? onStep, bool onSplash = false}) async {
     if (!ready) return;
     // New versions are looked for at once, not after the warm-up.
     await _checkFailedInstall();
@@ -1335,9 +1380,13 @@ class AppState extends ChangeNotifier {
     // No catalogue indexed yet = first full loading (up to ~5 min).
     final upgraded = _warmupVersion != appVersion;
     if (upgraded) siteIndex.failedAt.clear();
-    final first = _warmupAt == null || siteIndex.siteCount == 0 || upgraded;
+    // Full loading only the very first time; a new version of Pazulu keeps
+    // what is already known (chapter lists on disk, sites found).
+    final first = _warmupAt == null || siteIndex.siteCount == 0;
     final start = DateTime.now();
-    final end = start.add(first ? const Duration(minutes: 5) : const Duration(seconds: 90));
+    final end = start.add(first
+        ? const Duration(minutes: 5)
+        : (onSplash ? const Duration(seconds: 45) : const Duration(seconds: 90)));
     final works = [
       for (final e in entries)
         if (e.work.type != ContentType.anime) e.work,
@@ -1345,8 +1394,10 @@ class AppState extends ChangeNotifier {
     try {
       // 1. Catalogues of every site: all of them the first time, then only
       // those older than 24 h (the rest continues in background).
-      await crawlSiteIndex(onStep: onStep,
-          deadline: first ? start.add(const Duration(minutes: 3)) : start.add(const Duration(seconds: 30)));
+      if (first || !onSplash) {
+        await crawlSiteIndex(onStep: onStep,
+            deadline: first ? start.add(const Duration(minutes: 3)) : start.add(const Duration(seconds: 30)));
+      }
       // 2. Chapters of EVERY library work from all its sites. The lists
       // already on disk less than an hour old are kept as they are: later
       // starts only fetch what changed.
@@ -1358,7 +1409,10 @@ class AppState extends ChangeNotifier {
           _chapterCachedAt[w.id] = snap.$1;
         }
         final age = _chapterCachedAt[w.id];
-        if (first || age == null || DateTime.now().difference(age) > const Duration(hours: 1)) {
+        // Lists on disk less than 6 h old are kept as they are (12 h on a
+        // modest PC): a restart only refreshes what may have changed.
+        final maxAge = DeviceProfile.light ? const Duration(hours: 12) : const Duration(hours: 6);
+        if (age == null || DateTime.now().difference(age) > maxAge) {
           queue.add(w);
         }
       }
@@ -1441,6 +1495,9 @@ class AppState extends ChangeNotifier {
           if (_warmupVersion != null) 'warmupVersion': _warmupVersion,
           'statusVotes': _statusVotes,
           'firstSeen': _firstSeen,
+          'metaTried': {
+            for (final e in _metaTriedAt.entries) e.key: e.value.toIso8601String(),
+          },
           'statusChecked': {
             for (final e in _statusCheckedAt.entries) e.key: e.value.toIso8601String(),
           },
@@ -1471,18 +1528,28 @@ class AppState extends ChangeNotifier {
     final file = _snapshotFile(workId);
     if (file == null || !await file.exists()) return null;
     try {
-      final raw = jsonDecode(await file.readAsString());
-      if (raw is! Map || raw['workId'] != workId || raw['chapters'] is! List) return null;
-      final at = DateTime.tryParse('${raw['savedAt']}');
-      if (at == null) return null;
-      final list = [
-        for (final c in raw['chapters'] as List)
-          if (SourceChapter.fromJson(c) case final SourceChapter ok) ok,
-      ];
-      return list.isEmpty ? null : (at, list);
+      // Read and decoded outside the screen's thread when it is big (long
+      // series from many sites): a large library no longer freezes the app.
+      final path = file.path;
+      final size = await file.length();
+      return size > 48 * 1024
+          ? await Isolate.run(() => _decodeChapterSnapshot(File(path).readAsStringSync(), workId))
+          : _decodeChapterSnapshot(await file.readAsString(), workId);
     } catch (_) {
       return null;
     }
+  }
+
+  static (DateTime, List<SourceChapter>)? _decodeChapterSnapshot(String text, String workId) {
+    final raw = jsonDecode(text);
+    if (raw is! Map || raw['workId'] != workId || raw['chapters'] is! List) return null;
+    final at = DateTime.tryParse('${raw['savedAt']}');
+    if (at == null) return null;
+    final list = [
+      for (final c in raw['chapters'] as List)
+        if (SourceChapter.fromJson(c) case final SourceChapter ok) ok,
+    ];
+    return list.isEmpty ? null : (at, list);
   }
 
   Future<void> _writeChapterSnapshot(String workId, List<SourceChapter> chapters) async {
@@ -1986,11 +2053,19 @@ class AppState extends ChangeNotifier {
     if (at != null && DateTime.now().difference(at) < every) return;
     _lookupRunning.add(work.id);
     try {
-      await _runWebLookup(work, entry);
+      // One or two works at a time (each asks ~150 sites): a library of
+      // hundreds of imported works is searched little by little, never all
+      // at once. The date is saved: a work is not searched again for days.
+      await _lookupSlots.run(() async {
+        await _breathe();
+        await _runWebLookup(work, entry);
+      });
     } finally {
       _lookupRunning.remove(work.id);
     }
   }
+
+  final Slots _lookupSlots = Slots(DeviceProfile.light ? 1 : 2);
 
   Future<void> _runWebLookup(WorkInfo work, LibraryEntry? entry) async {
     if (entry != null) {
@@ -2628,7 +2703,7 @@ class AppState extends ChangeNotifier {
   /// status, authors and other titles are added. The work keeps its id,
   /// its sites and its progress. Metadata only: the cover is shown like
   /// any other library cover. Each work is tried once a week.
-  Future<int> enrichLibraryMetadata({int max = 80}) async {
+  Future<int> enrichLibraryMetadata({int max = 400}) async {
     if (_enriching) return 0;
     _enriching = true;
     var done = 0;
@@ -2644,13 +2719,16 @@ class AppState extends ChangeNotifier {
       for (final e in todo) {
         if (_disposed) break;
         await _breathe();
-        _metaTriedAt[e.work.id] = DateTime.now();
         final clean = cleanImportedTitle(e.work.title);
         try {
-          final hits = await anilist.comicCatalog(search: clean, perPage: 6, sort: 'SEARCH_MATCH')
-              .timeout(const Duration(seconds: 12));
-          final probe = WorkInfo(id: e.work.id, title: clean, altTitles: e.work.altTitles);
-          final match = hits.where((w) => sameWorkAcrossSources(probe, w)).firstOrNull;
+          // A title cut by the browser (« The Reincarnated Assassin Is a
+          // Geni… ») is searched by its beginning.
+          final truncated = RegExp(r'(\.\.\.|…)\s*$').hasMatch(e.work.title);
+          final hits = await anilist.comicCatalog(search: clean, perPage: 8, sort: 'SEARCH_MATCH')
+              .timeout(const Duration(seconds: 15));
+          // Answer received: not asked again before a week (kept on disk).
+          _metaTriedAt[e.work.id] = DateTime.now();
+          final match = sameMetadataWork(clean, e.work.altTitles, hits, truncated: truncated);
           if (match == null) {
             if (clean != e.work.title) {
               e.work = WorkInfo.fromJson({...e.work.toJson(), 'title': clean});
@@ -2681,13 +2759,39 @@ class AppState extends ChangeNotifier {
         } catch (err) {
           AppLog.info('Fiche AniList non trouvée pour ${e.work.title} : $err');
         }
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+        // AniList allows ~60 requests a minute.
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
       }
       if (done > 0) AppLog.info('Fiches complétées (image, résumé, genres) : $done');
+      unawaited(_saveLocatedReaders());
     } finally {
       _enriching = false;
     }
     return done;
+  }
+
+  /// The catalogue entry that is the same work: same title or alias (also
+  /// written a little differently), or — for a title cut by the browser —
+  /// one title starting with the known beginning.
+  static WorkInfo? sameMetadataWork(String title, List<String> alt, List<WorkInfo> hits,
+      {bool truncated = false}) {
+    final mine = {
+      for (final t in [title, ...alt]) SiteTitleIndex.loose(SiteTitleIndex.norm(t)),
+    }..removeWhere((t) => t.length < 3);
+    Iterable<String> theirs(WorkInfo w) =>
+        [w.title, ...w.altTitles].map((t) => SiteTitleIndex.loose(SiteTitleIndex.norm(t)));
+    for (final w in hits) {
+      if (theirs(w).any(mine.contains)) return w;
+    }
+    if (truncated) {
+      final start = SiteTitleIndex.loose(SiteTitleIndex.norm(title));
+      if (start.length >= 12) {
+        for (final w in hits) {
+          if (theirs(w).any((t) => t.startsWith(start))) return w;
+        }
+      }
+    }
+    return null;
   }
 
   final Map<String, DateTime> _metaTriedAt = {};

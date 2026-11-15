@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:ui' show AppExitResponse, PlatformDispatcher;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'core/app_state.dart';
 import 'core/device_profile.dart';
@@ -59,13 +61,28 @@ Future<void> main() async {
   // updates (site catalogues, chapter lists, new chapters, statuses) run
   // afterwards in background, shown discreetly in the header: the library
   // is usable at once, even on a modest PC.
+  // Modest PC (light mode): the update is done here, on the splash, in one
+  // go and limited in time; once the app is open, background work steps
+  // aside as soon as the user does something. Other PCs: the app opens at
+  // once and updates in background.
+  if (DeviceProfile.light) {
+    await state.warmUp(onStep: progress.report, onSplash: true);
+  }
   progress.reached(5);
   await progress.finish();
-  runApp(PazuluApp(state: state));
-  Timer(Duration(seconds: DeviceProfile.light ? 4 : 2), () {
-    unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
-        .whenComplete(() => state.backgroundStep.value = null));
+  // Every click, scroll or key press: light mode pauses background work.
+  GestureBinding.instance.pointerRouter.addGlobalRoute((_) => state.touch());
+  HardwareKeyboard.instance.addHandler((_) {
+    state.touch();
+    return false;
   });
+  runApp(PazuluApp(state: state));
+  if (!DeviceProfile.light) {
+    Timer(const Duration(seconds: 2), () {
+      unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
+          .whenComplete(() => state.backgroundStep.value = null));
+    });
+  }
 }
 
 class PazuluApp extends StatefulWidget {
@@ -85,6 +102,8 @@ class _PazuluAppState extends State<PazuluApp> {
   @override
   void initState() {
     super.initState();
+    _appearance.value = _lookOf(widget.state);
+    widget.state.addListener(_onState);
     // Enregistre la bibliothèque dès que l'app passe en arrière-plan ou se ferme.
     _lifecycle = AppLifecycleListener(
       onPause: () {
@@ -108,8 +127,17 @@ class _PazuluAppState extends State<PazuluApp> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    widget.state.removeListener(_onState);
+    _appearance.dispose();
     super.dispose();
   }
+
+  final _appearance = ValueNotifier<String>('');
+
+  String _lookOf(AppState s) =>
+      '${s.settings.themeId}|${s.settings.darkMode}|${s.settings.reduceMotion}|${DeviceProfile.light}';
+
+  void _onState() => _appearance.value = _lookOf(widget.state);
 
   /// Le thème n'est reconstruit que lorsque la palette change.
   ThemeData _themeFor(String id, bool dark) {
@@ -126,8 +154,10 @@ class _PazuluAppState extends State<PazuluApp> {
     final state = widget.state;
     return AppScope(
       state: state,
+      // Rebuilt only when the look changes (theme, dark mode, animations),
+      // not at every change of the library.
       child: ListenableBuilder(
-        listenable: state,
+        listenable: _appearance,
         builder: (context, _) {
           final theme = _themeFor(state.settings.themeId, state.settings.darkMode);
           return MaterialApp(

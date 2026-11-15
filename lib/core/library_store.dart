@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
 
@@ -131,7 +132,10 @@ class LibraryStore {
 
   Future<LibraryData?> _read(File f) async {
     try {
-      final json = jsonDecode(await f.readAsString());
+      // A big library (hundreds of works, thousands of chapters read) is
+      // read and decoded outside the screen's thread.
+      final path = f.path;
+      final json = await Isolate.run(() => jsonDecode(File(path).readAsStringSync()));
       if (json is! Map) return null;
       return LibraryData.fromJson(json.cast<String, dynamic>());
     } catch (_) {
@@ -141,13 +145,22 @@ class LibraryStore {
 
   Future<void> save(LibraryData data) async {
     if (!await dir.exists()) await dir.create(recursive: true);
-    final text = jsonEncode(data.toJson());
-    await _tmp.writeAsString(text, flush: true);
-    if (await _file.exists()) {
-      await _file.copy(_backup.path);
-      await _file.delete();
+    // Only the snapshot of the data is taken here; turning it into text and
+    // writing it (several MB for a big library) happen outside the screen's
+    // thread.
+    final json = data.toJson();
+    final tmp = _tmp.path, file = _file.path, backup = _backup.path;
+    await Isolate.run(() => _write(json, tmp, file, backup));
+  }
+
+  static void _write(Map<String, dynamic> json, String tmp, String file, String backup) {
+    File(tmp).writeAsStringSync(jsonEncode(json), flush: true);
+    final f = File(file);
+    if (f.existsSync()) {
+      f.copySync(backup);
+      f.deleteSync();
     }
-    await _tmp.rename(_file.path);
+    File(tmp).renameSync(file);
   }
 
   /// Une sauvegarde automatique par jour, 7 conservées.

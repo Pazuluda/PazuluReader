@@ -91,3 +91,35 @@ class HostGate {
     }
   }
 }
+
+/// At most [size] jobs at the same time, the others wait their turn in
+/// order (used for the « search every site » lookups: one or two works at
+/// a time, never hundreds at once after a big import).
+class Slots {
+  Slots(this.size);
+
+  int size;
+  int _running = 0;
+  final Queue<Completer<void>> _waiting = Queue();
+
+  int get waiting => _waiting.length;
+
+  Future<T> run<T>(Future<T> Function() job) async {
+    if (_running >= size) {
+      final c = Completer<void>();
+      _waiting.add(c);
+      await c.future;
+    } else {
+      _running++;
+    }
+    try {
+      return await job();
+    } finally {
+      if (_waiting.isNotEmpty) {
+        _waiting.removeFirst().complete(); // the place passes to the next
+      } else {
+        _running--;
+      }
+    }
+  }
+}
