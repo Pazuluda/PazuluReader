@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.4.0';
+const String appVersion = '1.4.1';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -1790,9 +1790,25 @@ class AppState extends ChangeNotifier {
       }
     }
     final rejected = <String, String>{};
+    // Each other source's list on its own (to compare with the most
+    // advanced one, not with a mix).
+    List<List<SourceChapter>> otherLists(String sourceId) {
+      final bySaved = <String, List<SourceChapter>>{};
+      for (final c in saved) {
+        if (c.sourceId != sourceId) bySaved.putIfAbsent(c.sourceId, () => []).add(c);
+      }
+      return [
+        for (final pair in successful.entries)
+          if (pair.key != sourceId && !ListingGuard.looksMixed(pair.value)) pair.value,
+        ...bySaved.values,
+      ];
+    }
     for (final pair in successful.entries.toList()) {
       if (exactSeries(pair.key)) continue;
-      final reason = ListingGuard.rejectReason(pair.value, peersOf(pair.key));
+      final reason = ListingGuard.rejectReason(pair.value, peersOf(pair.key)) ??
+          (origin.contains(pair.key)
+              ? null
+              : ListingGuard.farBeyondAllPeers(pair.value, otherLists(pair.key)));
       if (reason == null) continue;
       if (origin.contains(pair.key)) {
         // The page the user opened is kept, only its foreign chapters go.
