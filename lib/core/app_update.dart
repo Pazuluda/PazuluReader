@@ -14,7 +14,15 @@ class AppUpdateInfo {
     required this.size,
     this.publishedAt,
     this.pageUrl,
+    this.setupUrl,
+    this.setupName,
+    this.setupSize = 0,
   });
+
+  /// Official installer of the release (« PazuluReader-X.Y.Z-setup.exe »).
+  final String? setupUrl;
+  final String? setupName;
+  final int setupSize;
 
   final String version;
   final String notes;
@@ -80,13 +88,14 @@ class AppUpdater {
     final assets = json['assets'];
     if (assets is! List) return null;
     Map? zip;
+    Map? setup;
     for (final a in assets) {
       if (a is! Map) continue;
       final name = '${a['name'] ?? ''}'.toLowerCase();
+      if (name.endsWith('-setup.exe') && a['browser_download_url'] is String) setup = a;
       if (!name.endsWith('.zip')) continue;
       // The Windows build first (« PazuluReader-2.4.1-windows.zip »).
       if (name.contains('windows') || zip == null) zip = a;
-      if (name.contains('windows')) break;
     }
     if (zip == null || zip['browser_download_url'] is! String) return null;
     final parts = versionParts(tag);
@@ -98,6 +107,9 @@ class AppUpdater {
       size: zip['size'] is int ? zip['size'] as int : 0,
       publishedAt: DateTime.tryParse('${json['published_at'] ?? ''}'),
       pageUrl: json['html_url'] is String ? json['html_url'] as String : null,
+      setupUrl: setup?['browser_download_url'] as String?,
+      setupName: setup == null ? null : '${setup['name']}',
+      setupSize: setup?['size'] is int ? setup!['size'] as int : 0,
     );
   }
 
@@ -110,15 +122,35 @@ class AppUpdater {
     return parseRelease(utf8.decode(r.bodyBytes), current);
   }
 
-  /// Downloads the ZIP into %TEMP%\pazulu-update (progress 0..1).
-  Future<File> download(AppUpdateInfo info, {void Function(double)? onProgress}) async {
-    final dir = Directory('${Directory.systemTemp.path}${Platform.pathSeparator}pazulu-update');
+  static Directory get workDir =>
+      Directory('${Directory.systemTemp.path}${Platform.pathSeparator}pazulu-update');
+
+  /// Pazulu was installed with the official installer (its uninstaller is
+  /// next to the program): the update then uses the release's installer,
+  /// which closes Pazulu, replaces the files where they are and restarts
+  /// it, without any window. Otherwise (portable folder) the ZIP is used.
+  static bool installedWithSetup() {
+    try {
+      final dir = File(Platform.resolvedExecutable).parent;
+      return File('${dir.path}${Platform.pathSeparator}unins000.exe').existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Downloads the update into %TEMP%\pazulu-update (progress 0..1): the
+  /// installer when [useSetup], otherwise the ZIP.
+  Future<File> download(AppUpdateInfo info, {void Function(double)? onProgress, bool useSetup = false}) async {
+    final setup = useSetup && info.setupUrl != null;
+    final url = setup ? info.setupUrl! : info.zipUrl;
+    final name = setup ? (info.setupName ?? 'PazuluReader-setup.exe') : info.zipName;
+    final dir = workDir;
     await dir.create(recursive: true);
-    final file = File('${dir.path}${Platform.pathSeparator}${info.zipName.replaceAll(RegExp(r'[^\w.\-]'), '_')}');
-    final req = http.Request('GET', Uri.parse(info.zipUrl))..headers['User-Agent'] = 'PazuluReader-Updater';
+    final file = File('${dir.path}${Platform.pathSeparator}${name.replaceAll(RegExp(r'[^\w.\-]'), '_')}');
+    final req = http.Request('GET', Uri.parse(url))..headers['User-Agent'] = 'PazuluReader-Updater';
     final res = await _client.send(req).timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) throw 'Téléchargement refusé (HTTP ${res.statusCode})';
-    final total = res.contentLength ?? info.size;
+    final total = res.contentLength ?? (setup ? info.setupSize : info.size);
     final sink = file.openWrite();
     var got = 0;
     try {
@@ -181,6 +213,56 @@ class AppUpdater {
       r"Start-Process -FilePath (Join-Path $dst $exe) -WorkingDirectory $dst",
       '',
     ].join('\r\n');
+  }
+
+  /// Runs the official installer silently (no window): it waits for Pazulu
+  /// to close (closing it if needed), installs in the same folder and
+  /// restarts it.
+  Future<void> launchSetup(File setup) async {
+    await Process.start(setup.path, [
+      '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOCANCEL', '/SP-',
+      '/CLOSEAPPLICATIONS', '/LOG=${workDir.path}${Platform.pathSeparator}setup.log',
+    ], mode: ProcessStartMode.detached, runInShell: false);
+  }
+
+  /// Remembers which version is being installed: if Pazulu restarts in the
+  /// old version, the install failed and it is not downloaded again in a
+  /// loop.
+  static File get _pendingFile => File('${workDir.path}${Platform.pathSeparator}pending.json');
+
+  static Future<void> markPending(String version) async {
+    try {
+      await workDir.create(recursive: true);
+      await _pendingFile.writeAsString(jsonEncode({'version': version, 'at': DateTime.now().toIso8601String()}));
+    } catch (_) {}
+  }
+
+  /// The version whose install just failed (Pazulu restarted older), with
+  /// the end of the install logs; null otherwise. Clears the marker.
+  static Future<(String, String)?> failedInstall(String current) async {
+    try {
+      final f = _pendingFile;
+      if (!await f.exists()) return null;
+      final raw = jsonDecode(await f.readAsString());
+      await f.delete();
+      if (raw is! Map) return null;
+      final v = '${raw['version']}';
+      final at = DateTime.tryParse('${raw['at']}');
+      if (at == null || DateTime.now().difference(at) > const Duration(hours: 6)) return null;
+      if (compareVersions(v, current) <= 0) return null; // installed fine
+      final logs = StringBuffer();
+      for (final name in ['update.log', 'setup.log']) {
+        final l = File('${workDir.path}${Platform.pathSeparator}$name');
+        if (await l.exists()) {
+          final text = await l.readAsString();
+          logs.writeln('--- $name');
+          logs.writeln(text.length > 3000 ? text.substring(text.length - 3000) : text);
+        }
+      }
+      return (v, logs.toString());
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Starts the install script, hidden and detached. The caller then quits

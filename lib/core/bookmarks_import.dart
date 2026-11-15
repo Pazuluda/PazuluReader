@@ -89,6 +89,13 @@ double? chapterFromBookmark(Bookmark b, {String rest = ''}) {
   return inTitle == null ? null : double.tryParse(inTitle.group(1)!.replaceAll(',', '.'));
 }
 
+/// Title of an imported work without the marks some browsers / sites add
+/// (« Reincarnator's Stream » », « … », « | »).
+String cleanImportedTitle(String raw) => raw
+    .replaceAll(RegExp(r'[\s»«›‹|•·…>-]+$'), '')
+    .replaceAll(RegExp(r'^[\s»«›‹|•·…<-]+'), '')
+    .trim();
+
 /// « Solo Leveling - Chapitre 120 - MangaSite » → « Solo Leveling ».
 String titleFromBookmark(String raw) {
   var t = raw.trim();
@@ -101,7 +108,8 @@ String titleFromBookmark(String raw) {
   for (final w in const ['Lire ', 'Read ', 'Scan ']) {
     if (t.startsWith(w)) t = t.substring(w.length);
   }
-  return t.replaceAll(RegExp(r'\s+(VF|FR|Raw|Manga|Manhwa|Scan)$', caseSensitive: false), '').trim();
+  return cleanImportedTitle(
+      t.replaceAll(RegExp(r'\s+(VF|FR|Raw|Manga|Manhwa|Scan)$', caseSensitive: false), ''));
 }
 
 /// Finds the readings in [marks]:

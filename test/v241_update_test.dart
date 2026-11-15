@@ -21,6 +21,12 @@ void main() {
     expect(u.zipUrl, 'https://x/win.zip');
     expect(u.notes, '- Corrections');
     expect(AppUpdater.parseRelease(body, '2.4.2'), isNull);
+    expect(u.setupUrl, isNull);
+    final withSetup = AppUpdater.parseRelease(body.replaceFirst('"assets":[',
+        '"assets":[{"name":"PazuluReader-2.4.2-setup.exe","browser_download_url":"https://x/setup.exe","size":20000000},'),
+        '2.4.1')!;
+    expect(withSetup.setupUrl, 'https://x/setup.exe');
+    expect(withSetup.zipUrl, 'https://x/win.zip');
     expect(AppUpdater.parseRelease(body.replaceFirst('"prerelease":false', '"prerelease":true'), '2.4.1'), isNull);
   });
 

@@ -25,6 +25,10 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\pazulu_reader.exe
 SetupIconFile=..\assets\icon\app_icon.ico
+; Mise a jour depuis l'app (installation silencieuse) : Pazulu est ferme
+; s'il tourne encore, puis relance a la fin.
+CloseApplications=force
+RestartApplications=no
 
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
@@ -42,3 +46,4 @@ Name: "{autodesktop}\Pazulu Reader"; Filename: "{app}\pazulu_reader.exe"; Tasks:
 
 [Run]
 Filename: "{app}\pazulu_reader.exe"; Description: "Lancer Pazulu Reader"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\pazulu_reader.exe"; Flags: nowait; Check: WizardSilent
