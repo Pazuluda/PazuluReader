@@ -9,7 +9,11 @@ List<SourceChapter> site(String id, int to, {String lang = 'en', bool dated = tr
       for (var i = 1; i <= to; i++)
         SourceChapter(sourceId: id, chapterId: '$id-$i', key: ChapterKey.parse('$i'),
             lang: lang, group: id, pages: 3,
-            publishedAt: dated ? now.subtract(Duration(days: 4 + 7 * (to - i))) : null),
+            // Same chapter = same release date everywhere (chapter 75 four
+            // days ago, weekly); French one week later.
+            publishedAt: dated
+                ? now.subtract(Duration(days: 4 + 7 * (75 - i) - (lang == 'fr' ? 7 : 0)))
+                : null),
     ];
 
 void main() {

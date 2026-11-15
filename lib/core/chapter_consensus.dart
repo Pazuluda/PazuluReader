@@ -133,11 +133,10 @@ class ChapterConsensus {
     // « Solo Leveling: Ragnarok », ~200 chapters, against the webtoon's 75
     // on 4 sites) is hidden, even complete and gap-free. Offline copies
     // vote but are never hidden.
+    // Every list votes (a list numbered one chapter off is still at the
+    // same level: the vote does not depend on the date check above).
     final minority = ListingGuard.minorityLevels(
-      {
-        for (final e in voters.entries)
-          if (!shifted.contains(e.key)) e.key: e.value,
-      },
+      voters,
       siteOf: (key) => key.split('|').first,
       protect: {for (final k in voters.keys) if (k.startsWith('local')) k},
       now: at,
