@@ -24,7 +24,9 @@ import 'anime/crunchyroll.dart';
 import 'models.dart';
 import 'planning.dart';
 import 'achievements.dart';
+import 'bookmarks_import.dart';
 import 'coverage.dart';
+import 'device_profile.dart';
 import 'language_consensus.dart';
 import 'app_update.dart';
 import 'schedule/mangaupdates.dart';
@@ -59,7 +61,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.0.0';
+const String appVersion = '1.1.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -103,25 +105,66 @@ class AppState extends ChangeNotifier {
     if (_readersOpen == 0) {
       _quietNotify?.cancel();
       _quietNotify = null;
-      super.notifyListeners();
+      _notifyNow();
     }
   }
 
+  /// Increases at every real refresh of the screens: a page can keep what
+  /// it computed (unread counts…) while it has not changed.
+  int revision = 0;
+
+  void _notifyNow() {
+    revision++;
+    super.notifyListeners();
+  }
+
+  DateTime _lastNotify = DateTime(2000);
+  Timer? _trailingNotify;
+
+  /// Background work (catalogues, chapters, statuses) may ask for many
+  /// refreshes per second: the screens are rebuilt at once, then at most
+  /// once per [DeviceProfile.notifyGap] (the last change is never lost).
   @override
   void notifyListeners() {
     if (_readersOpen == 0) {
-      super.notifyListeners();
+      if (_trailingNotify != null) return;
+      final since = DateTime.now().difference(_lastNotify);
+      final gap = DeviceProfile.notifyGap;
+      if (since >= gap) {
+        _lastNotify = DateTime.now();
+        _notifyNow();
+        return;
+      }
+      _trailingNotify = Timer(gap - since, () {
+        _trailingNotify = null;
+        _lastNotify = DateTime.now();
+        _notifyNow();
+      });
       return;
     }
     _quietNotify ??= Timer(const Duration(seconds: 3), () {
       _quietNotify = null;
-      super.notifyListeners();
+      _notifyNow();
     });
   }
 
   /// Short pause between two background requests while reading.
-  Future<void> _breathe() =>
-      reading ? Future<void>.delayed(const Duration(milliseconds: 400)) : Future<void>.value();
+  /// Also waits while the window is minimised / in the background (a game
+  /// in front): the background work resumes when Pazulu comes back.
+  Future<void> _breathe() async {
+    while (!_active && !_disposed) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    if (reading) await Future<void>.delayed(const Duration(milliseconds: 400));
+  }
+
+  bool _disposed = false;
+
+  /// Current background step (catalogues, chapters…), shown discreetly in
+  /// the header; null = nothing running.
+  final ValueNotifier<String?> backgroundStep = ValueNotifier(null);
+
+  Future<void>? _indexLoading;
 
   AppState() : _mangadex = MangaDexSource() {
     sources = SourceRegistry([_mangadex, _peppercarrot, _sushiscan, _captures]);
@@ -399,7 +442,9 @@ class AppState extends ChangeNotifier {
       };
       siteIndex = SiteTitleIndex(
           File('${dir.path}${Platform.pathSeparator}site-index.json'));
-      await siteIndex.load();
+      // Hundreds of thousands of titles: loaded in background, the library
+      // opens without waiting (searches use it as soon as it is there).
+      _indexLoading = siteIndex.load().then((_) => notifyListeners());
       onStep?.call('Chargement de la bibliothèque…');
       AppLog.info('Démarrage de Pazulu Reader $appVersion');
       final store = LibraryStore(dir);
@@ -409,6 +454,7 @@ class AppState extends ChangeNotifier {
       _downloads = downloads;
       final result = await store.load();
       _data = result.data;
+      DeviceProfile.mode = _data.settings.performanceMode;
       loadWarning = result.warning;
       // Old versions could notify years-old or foreign chapters: clean them.
       var removed = UpdateHygiene.clean(_data.updates, _data.entries);
@@ -468,6 +514,7 @@ class AppState extends ChangeNotifier {
   /// Les tâches de fond nécessiteraient une implémentation propre à chaque OS.
   void setActive(bool active) {
     _active = active;
+    DeviceProfile.setBackground(!active);
     if (active) {
       _scheduleAutoChecks();
       _scheduleSourceHealthChecks(initial: true);
@@ -1209,6 +1256,7 @@ class AppState extends ChangeNotifier {
     if (_crawling) return;
     _crawling = true;
     try {
+      await _indexLoading;
       final now = DateTime.now();
       final todo = webConnectors().where((s) {
         if (siteIndex.isFresh(s.id, maxAge: maxAge)) return false;
@@ -1251,11 +1299,11 @@ class AppState extends ChangeNotifier {
           }
           done++;
           report();
-          if (done % 10 == 0) notifyListeners();
+          if (done % 25 == 0) notifyListeners();
           if (done % 25 == 0 && !reading) unawaited(siteIndex.save());
         }
       }
-      await Future.wait([for (var i = 0; i < 12; i++) worker()]);
+      await Future.wait([for (var i = 0; i < DeviceProfile.crawlWorkers; i++) worker()]);
       await siteIndex.save();
       AppLog.info('Index des sites : $ok/$done catalogues lus, '
           '${siteIndex.siteCount} sites, ${siteIndex.titleCount} titres.');
@@ -1276,6 +1324,7 @@ class AppState extends ChangeNotifier {
   /// otherwise nothing (instant start). The rest refreshes in background.
   Future<void> warmUp({void Function(String step)? onStep}) async {
     if (!ready) return;
+    await _indexLoading;
     // No catalogue indexed yet = first full loading (up to ~5 min).
     final upgraded = _warmupVersion != appVersion;
     if (upgraded) siteIndex.failedAt.clear();
@@ -1310,6 +1359,7 @@ class AppState extends ChangeNotifier {
       onStep?.call('Chapitres de la bibliothèque · 0/${queue.length}');
       Future<void> worker() async {
         while (queue.isNotEmpty && DateTime.now().isBefore(end)) {
+          await _breathe();
           final w = queue.removeLast();
           try {
             await chaptersFor(w, refresh: true).timeout(const Duration(seconds: 50));
@@ -1320,7 +1370,7 @@ class AppState extends ChangeNotifier {
           onStep?.call('Chapitres de la bibliothèque · $done/${done + queue.length}');
         }
       }
-      await Future.wait([for (var i = 0; i < 6; i++) worker()]);
+      await Future.wait([for (var i = 0; i < DeviceProfile.chapterWorkers; i++) worker()]);
       // 3. New chapters (notifications) from the lists just loaded.
       if (settings.checkOnStartup && entries.any((e) => e.watch) && DateTime.now().isBefore(end)) {
         onStep?.call('Recherche des nouveaux chapitres…');
@@ -2529,6 +2579,77 @@ class AppState extends ChangeNotifier {
 
   bool inLibrary(String workId) => _data.entries.containsKey(workId);
 
+  /// Imports the readings found in a browser bookmarks export (HTML file
+  /// chosen by the user): each series is added to the library with every
+  /// site that has it, and the chapter of the bookmark becomes the reading
+  /// position (earlier chapters marked as read). An existing reading is
+  /// never moved backwards. Nothing is downloaded here.
+  Future<BookmarkImportReport> importBookmarks(String html) async {
+    await _indexLoading;
+    final marks = parseBookmarksHtml(html);
+    final hostToSource = <String, String>{};
+    for (final site in activeSources) {
+      if (site.hasReaderConnector) continue;
+      try {
+        hostToSource.putIfAbsent(_normalizedHost(site.home), () => _publicConnectorFor(site).id);
+      } catch (_) {}
+    }
+    final readings = findReadings(
+      marks,
+      sourceForHost: (h) => hostToSource[h],
+      titlesOf: (id) => siteIndex.bySource[id] ?? const <IndexedTitle>[],
+      titleKnown: (t) => siteIndex.linksFor([t]).isNotEmpty,
+    );
+    var added = 0, updated = 0, positioned = 0;
+    for (final r in readings) {
+      final seen = <String>{};
+      final links = <SourceLink>[
+        if (r.sourceId != null && r.seriesUrl != null)
+          SourceLink(sourceId: r.sourceId!, workId: r.seriesUrl!),
+        ...siteIndex.linksFor([r.title]),
+      ].where((l) => seen.add(l.sourceId)).toList();
+      final probe = WorkInfo(id: 'index:${r.key}', title: r.title, links: links);
+      LibraryEntry? entry;
+      for (final e in entries) {
+        if (sameWorkAcrossSources(e.work, probe)) {
+          entry = e;
+          break;
+        }
+      }
+      if (entry == null) {
+        entry = LibraryEntry(work: probe, status: TrackStatus.reading);
+        _data.entries[probe.id] = entry;
+        added++;
+      } else {
+        updated++;
+      }
+      final n = r.chapter;
+      if (n == null || n <= 0) continue;
+      final p = entry.progress;
+      final current = p.lastKey == null ? null : ChapterKey.parse(p.lastKey).number;
+      if (current != null && current >= n) continue;
+      final whole = n.floor();
+      for (var i = 1; i < whole && i <= 3000; i++) {
+        p.readKeys.add(ChapterKey.parse('$i').id);
+      }
+      final label = n == whole ? '$whole' : '$n';
+      p.lastKey = ChapterKey.parse(label).id;
+      p.lastPage = 0;
+      p.updatedAt = DateTime.now();
+      if (entry.status == TrackStatus.planned || entry.status == TrackStatus.discover) {
+        entry.status = TrackStatus.reading;
+      }
+      entry.updatedAt = DateTime.now();
+      positioned++;
+    }
+    if (readings.isNotEmpty) _changed();
+    AppLog.info('Import des favoris : ${marks.length} liens, ${readings.length} lectures, '
+        '$added ajoutées, $updated déjà présentes, $positioned positions de lecture.');
+    return BookmarkImportReport(
+        links: marks.length, readings: readings.length, added: added, updated: updated,
+        positioned: positioned);
+  }
+
   LibraryEntry addToLibrary(WorkInfo work, {TrackStatus status = TrackStatus.planned}) {
     final existing = _data.entries[work.id];
     if (existing != null) return existing;
@@ -3516,6 +3637,9 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _trailingNotify?.cancel();
+    _quietNotify?.cancel();
     engine.dispose();
     _checkTimer?.cancel();
     _healthTimer?.cancel();
@@ -3523,4 +3647,20 @@ class AppState extends ChangeNotifier {
     _updateTimer?.cancel();
     super.dispose();
   }
+}
+
+class BookmarkImportReport {
+  const BookmarkImportReport({
+    required this.links,
+    required this.readings,
+    required this.added,
+    required this.updated,
+    required this.positioned,
+  });
+
+  final int links;
+  final int readings;
+  final int added;
+  final int updated;
+  final int positioned;
 }

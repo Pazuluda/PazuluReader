@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/anime/anilist.dart';
@@ -173,6 +175,36 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
+  List<IndexedWork> _suggest = const [];
+  String _suggestFor = '';
+  String _suggestPending = '';
+  Timer? _suggestTimer;
+  int _suggestToken = 0;
+
+  void _scheduleSuggest(String q) {
+    if (_suggestPending == q) return;
+    _suggestPending = q;
+    _suggestTimer?.cancel();
+    _suggestTimer = Timer(const Duration(milliseconds: 180), () async {
+      final token = ++_suggestToken;
+      final index = AppScope.read(context).siteIndex;
+      var works = index.works;
+      if (works == null) {
+        await index.prepareWorks();
+        works = index.works;
+      }
+      if (works == null || !mounted || token != _suggestToken) return;
+      final found = await SiteTitleIndex.search(works, q,
+          cancelled: () => !mounted || token != _suggestToken);
+      if (!mounted || token != _suggestToken) return;
+      setState(() {
+        _suggest = found;
+        _suggestFor = q;
+        _suggestPending = '';
+      });
+    });
+  }
+
   /// Instant suggestions while typing: the library and every site's
   /// catalogue answer before the search of all sources.
   Widget _suggestions(AppState app) {
@@ -209,30 +241,20 @@ class _DiscoverPageState extends State<DiscoverPage> {
             pushPage(context, WorkPage(work: e.work, heroTag: 'sugg-${e.work.id}'))));
       }
     }
-    final works = app.siteIndex.works;
-    if (works == null) {
-      app.siteIndex.prepareWorks().then((_) {
-        if (mounted) setState(() {});
-      });
-    } else {
-      // Titles starting with the text first, then containing it.
-      final starts = <IndexedWork>[];
-      final contains = <IndexedWork>[];
-      for (final w in works) {
-        if (starts.length >= 8) break;
-        if (w.key.startsWith(q)) {
-          starts.add(w);
-        } else if (contains.length < 8 && w.key.contains(q)) {
-          contains.add(w);
-        }
-      }
-      for (final w in [...starts, ...contains].take(8 - hits.length)) {
+    // Catalogue matches: searched in background after a short pause in
+    // typing (never during the screen's drawing).
+    if (_suggestFor != q) _scheduleSuggest(q);
+    if (q.startsWith(_suggestFor) || _suggestFor.startsWith(q)) {
+      for (final w in _suggest.where((w) => w.key.contains(q)).take(8 - hits.length)) {
         hits.add((w.title, '${w.links.length} site${w.links.length > 1 ? 's' : ''}', () =>
             pushPage(context, WorkPage(work: w.toWork(), heroTag: 'sugg-${w.key}'))));
       }
     }
     if (hits.isEmpty) return const SizedBox.shrink();
-    return Container(
+    // Same tap region as the search field: pressing a suggestion does not
+    // count as a click « outside » (which took the focus away, hid the list
+    // and lost the click before it was released).
+    return TextFieldTapRegion(child: Container(
       margin: const EdgeInsets.only(top: 6),
       constraints: const BoxConstraints(maxWidth: 760),
       decoration: BoxDecoration(
@@ -248,7 +270,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 size: 18, color: p.bright),
             title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
             trailing: Text(sub, style: TextStyle(color: p.muted, fontSize: 12)),
-            onTap: open,
+            onTap: () {
+              _searchFocus.unfocus();
+              open();
+            },
           ),
         ListTile(
           dense: true,
@@ -257,7 +282,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
           onTap: () => _submit(_controller.text),
         ),
       ]),
-    );
+    ));
   }
 
   /// Filters of the search results.
@@ -484,21 +509,45 @@ class _DiscoverPageState extends State<DiscoverPage> {
   int _indexShown = 200;
   List<IndexedWork>? _indexCache;
   String? _indexCacheKey;
+  String? _indexPendingKey;
+  Timer? _indexTimer;
+  int _indexToken = 0;
 
   List<IndexedWork> _indexWorks(AppState app) {
     final all = app.siteIndex.works;
     if (all == null) {
       // Sorted in background (hundreds of thousands of titles), then shown.
-      app.siteIndex.prepareWorks().then((_) {
-        if (mounted) setState(() {});
-      });
-      return const [];
+      if (_indexPendingKey != 'prepare') {
+        _indexPendingKey = 'prepare';
+        app.siteIndex.prepareWorks().then((_) {
+          _indexPendingKey = null;
+          if (mounted) setState(() {});
+        });
+      }
+      return _indexCache ?? const [];
     }
-    final key = '${identityHashCode(all)}|$_indexQuery';
-    if (_indexCache != null && _indexCacheKey == key) return _indexCache!;
     final q = SiteTitleIndex.norm(_indexQuery);
-    _indexCacheKey = key;
-    return _indexCache = q.isEmpty ? all : all.where((w) => w.key.contains(q)).toList();
+    if (q.isEmpty) return all;
+    final key = '${identityHashCode(all)}|$q';
+    if (_indexCache != null && _indexCacheKey == key) return _indexCache!;
+    // Filtered in background, a slice at a time; the previous result stays
+    // shown meanwhile.
+    if (_indexPendingKey != key) {
+      _indexPendingKey = key;
+      _indexTimer?.cancel();
+      _indexTimer = Timer(const Duration(milliseconds: 200), () async {
+        final token = ++_indexToken;
+        final found = await SiteTitleIndex.search(all, q,
+            limit: 1 << 30, cancelled: () => !mounted || token != _indexToken);
+        if (!mounted || token != _indexToken) return;
+        setState(() {
+          _indexCache = found;
+          _indexCacheKey = key;
+          _indexPendingKey = null;
+        });
+      });
+    }
+    return _indexCache ?? const [];
   }
 
   List<Widget> _indexSlivers(AppState app) {
@@ -822,6 +871,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void dispose() {
     discoverSearchRequest.removeListener(_onExternalSearch);
+    _suggestTimer?.cancel();
+    _indexTimer?.cancel();
+    _suggestToken++;
+    _indexToken++;
     _scroll.dispose();
     _searchFocus.dispose();
     _controller.dispose();

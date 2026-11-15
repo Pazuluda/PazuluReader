@@ -1,0 +1,39 @@
+# Vérifie chaque pull request avant la fusion : tests + compilation Windows.
+# Ne publie rien (la release est faite par release.yml après la fusion).
+name: Vérification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.9'
+          cache: true
+
+      - name: Projet Windows
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          if (-not (Test-Path windows)) { flutter create --platforms=windows --org com.pazulu --project-name pazulu_reader . }
+          if (Test-Path test/widget_test.dart) { Remove-Item test/widget_test.dart }
+          ./tools/configure_platforms.ps1
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Tests
+        run: flutter test
+
+      - name: Compilation
+        run: flutter build windows --release

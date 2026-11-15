@@ -527,6 +527,7 @@ class Settings {
     this.readerMode = ReaderMode.vertical,
     this.gridColumns = 0,
     this.reduceMotion = false,
+    this.performanceMode = 'auto',
     this.includeSuggestive = true,
     this.checkOnStartup = true,
     this.autoCheckMinutes = 60,
@@ -561,6 +562,9 @@ class Settings {
   /// 0 = automatique selon la largeur.
   int gridColumns;
   bool reduceMotion;
+
+  /// « auto » (léger sur les PC à 4 cœurs ou moins), « light », « full ».
+  String performanceMode;
   bool includeSuggestive;
   bool checkOnStartup;
 
@@ -614,6 +618,7 @@ class Settings {
         'readerMode': readerMode.name,
         'gridColumns': gridColumns,
         'reduceMotion': reduceMotion,
+        'performanceMode': performanceMode,
         'includeSuggestive': includeSuggestive,
         'checkOnStartup': checkOnStartup,
         'cacheOnRead': cacheOnRead,
@@ -640,6 +645,9 @@ class Settings {
       readerMode: readerModeFromName(json['readerMode'] as String?),
       gridColumns: (json['gridColumns'] as int?) ?? 0,
       reduceMotion: (json['reduceMotion'] as bool?) ?? false,
+      performanceMode: const {'auto', 'light', 'full'}.contains(json['performanceMode'])
+          ? json['performanceMode'] as String
+          : 'auto',
       includeSuggestive: (json['includeSuggestive'] as bool?) ?? true,
       checkOnStartup: (json['checkOnStartup'] as bool?) ?? true,
       cacheOnRead: (json['cacheOnRead'] as bool?) ?? true,

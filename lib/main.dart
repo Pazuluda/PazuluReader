@@ -4,6 +4,7 @@ import 'dart:ui' show AppExitResponse, PlatformDispatcher;
 import 'package:flutter/material.dart';
 
 import 'core/app_state.dart';
+import 'core/device_profile.dart';
 import 'core/log.dart';
 import 'design/theme.dart';
 import 'ui/app_scope.dart';
@@ -54,12 +55,17 @@ Future<void> main() async {
   progress
     ..reached(4)
     ..dark.value = state.settings.darkMode;
-  // First launch, or back after a few hours: releases and library chapter
-  // lists are updated now, once, instead of on every fiche.
-  await state.warmUp(onStep: progress.report);
+  // The app opens as soon as the profile and the library are read. The
+  // updates (site catalogues, chapter lists, new chapters, statuses) run
+  // afterwards in background, shown discreetly in the header: the library
+  // is usable at once, even on a modest PC.
   progress.reached(5);
   await progress.finish();
   runApp(PazuluApp(state: state));
+  Timer(Duration(seconds: DeviceProfile.light ? 4 : 2), () {
+    unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
+        .whenComplete(() => state.backgroundStep.value = null));
+  });
 }
 
 class PazuluApp extends StatefulWidget {
@@ -90,6 +96,8 @@ class _PazuluAppState extends State<PazuluApp> {
         unawaited(widget.state.flush());
       },
       onResume: () => widget.state.setActive(true),
+      // Another window in front (a game…): lower priority, work goes on.
+      onInactive: () => DeviceProfile.setBackground(true),
       onExitRequested: () async {
         await widget.state.flush();
         return AppExitResponse.exit;
@@ -128,13 +136,14 @@ class _PazuluAppState extends State<PazuluApp> {
             theme: theme,
             darkTheme: theme,
             themeMode: state.settings.darkMode ? ThemeMode.dark : ThemeMode.light,
-            themeAnimationDuration: state.settings.reduceMotion
+            themeAnimationDuration: state.settings.reduceMotion || DeviceProfile.light
                 ? Duration.zero
                 : const Duration(milliseconds: 450),
             builder: (context, child) {
               final mq = MediaQuery.of(context);
               return MediaQuery(
-                data: mq.copyWith(disableAnimations: mq.disableAnimations || state.settings.reduceMotion),
+                data: mq.copyWith(disableAnimations:
+                    mq.disableAnimations || state.settings.reduceMotion || DeviceProfile.light),
                 child: child ?? const SizedBox.shrink(),
               );
             },

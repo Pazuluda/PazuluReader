@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/app_state.dart';
+import '../core/device_profile.dart';
 import '../core/log.dart';
 import '../core/models.dart';
 import '../design/theme.dart';
@@ -135,6 +136,27 @@ class SettingsPage extends StatelessWidget {
                     subtitle: const Text('S\'ajoute au réglage d\'accessibilité du système.'),
                     value: s.reduceMotion,
                     onChanged: (v) => app.updateSettings((st) => st.reduceMotion = v),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Performances'),
+                    subtitle: Text(
+                        'Mode léger : moins de tâches en parallèle, pas d\'animations, '
+                        'écrans rafraîchis moins souvent. Automatique = léger sur les PC '
+                        'à 4 cœurs ou moins (ce PC : ${DeviceProfile.processors}).'),
+                    trailing: DropdownButton<String>(
+                      value: s.performanceMode,
+                      onChanged: (v) {
+                        if (v == null) return;
+                        DeviceProfile.mode = v;
+                        app.updateSettings((st) => st.performanceMode = v);
+                      },
+                      items: const [
+                        DropdownMenuItem(value: 'auto', child: Text('Automatique')),
+                        DropdownMenuItem(value: 'light', child: Text('Léger')),
+                        DropdownMenuItem(value: 'full', child: Text('Complet')),
+                      ],
+                    ),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -380,6 +402,15 @@ class SettingsPage extends StatelessWidget {
                     subtitle: const Text('Fusionne avec la bibliothèque actuelle, sans perte de progression.'),
                     onTap: () => importLibrary(context, app),
                   ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.bookmarks_outlined, color: p.bright),
+                    title: const Text('Importer mes favoris (Chrome, Edge, Firefox…)'),
+                    subtitle: const Text(
+                        'Dans le navigateur : Favoris → Exporter au format HTML, puis choisissez '
+                        'le fichier ici. Les lectures et leur chapitre sont retrouvés.'),
+                    onTap: () => importBookmarks(context, app),
+                  ),
                   if (app.dataPath != null)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -429,6 +460,34 @@ class SettingsPage extends StatelessWidget {
     } catch (e, st) {
       AppLog.error('Export', e, st);
       messenger.showSnackBar(SnackBar(content: Text('Export impossible : $e')));
+    }
+  }
+
+  static Future<void> importBookmarks(BuildContext context, AppState app) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom, allowedExtensions: const ['html', 'htm'], withData: true);
+      final file = result?.files.single;
+      if (file == null) return;
+      Uint8List? bytes = file.bytes;
+      if (bytes == null && file.path != null) bytes = await File(file.path!).readAsBytes();
+      if (bytes == null) throw const FormatException('Fichier illisible.');
+      messenger.showSnackBar(const SnackBar(content: Text('Lecture des favoris…')));
+      final r = await app.importBookmarks(utf8.decode(bytes, allowMalformed: true));
+      messenger.showSnackBar(SnackBar(
+        duration: const Duration(seconds: 8),
+        content: Text(r.readings == 0
+            ? 'Aucune lecture reconnue parmi ${r.links} favoris. Les catalogues des sites '
+                'se chargent peut-être encore : réessayez dans quelques minutes.'
+            : '${r.readings} lecture(s) trouvée(s) parmi ${r.links} favoris : ${r.added} ajoutée(s), '
+                '${r.updated} déjà dans la bibliothèque, ${r.positioned} chapitre(s) repris.'),
+      ));
+    } on FormatException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e, st) {
+      AppLog.error('Import des favoris', e, st);
+      messenger.showSnackBar(SnackBar(content: Text('Import impossible : $e')));
     }
   }
 
