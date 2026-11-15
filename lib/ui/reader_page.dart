@@ -28,6 +28,7 @@ import '../engine/source_contract.dart';
 import '../engine/validation/access_detector.dart';
 import '../engine/validation/page_validation.dart';
 import 'app_scope.dart';
+import 'widgets/auto_scroll.dart';
 import 'widgets/common.dart';
 import 'widgets/reader_switcher.dart';
 import 'source_browser_page.dart';
@@ -108,6 +109,9 @@ class _ReaderPageState extends State<ReaderPage> {
   bool _uiVisible = true;
 
   final ScrollController _scroll = ScrollController(keepScrollOffset: false);
+
+  /// Défilement automatique au clic molette (lecture verticale).
+  final GlobalKey<AutoScrollAreaState> _autoScroll = GlobalKey();
   PageController? _pager;
   final FocusNode _focus = FocusNode(debugLabel: 'reader');
   Timer? _saveTimer;
@@ -1127,7 +1131,7 @@ class _ReaderPageState extends State<ReaderPage> {
                 ]),
                 const SizedBox(height: 16),
                 Text('Raccourcis : ← → pages · P / N chapitres · M mode · W ajustement · '
-                    'D double page · Échap quitter',
+                    'D double page · clic molette défilement automatique (vertical) · Échap quitter',
                     style: TextStyle(color: p.muted, fontSize: 12)),
               ],
             ),
@@ -1220,6 +1224,11 @@ class _ReaderPageState extends State<ReaderPage> {
     final rtl = _mode == ReaderMode.rtl;
 
     if (k == LogicalKeyboardKey.escape) {
+      final auto = _autoScroll.currentState;
+      if (auto != null && auto.active) {
+        auto.stop(); // Échap arrête d'abord le défilement automatique
+        return KeyEventResult.handled;
+      }
       Navigator.of(context).maybePop();
     } else if (k == LogicalKeyboardKey.keyF || k == LogicalKeyboardKey.f11) {
       _toggleUi();
@@ -1676,8 +1685,15 @@ class _ReaderPageState extends State<ReaderPage> {
         if (n is ScrollUpdateNotification || n is ScrollEndNotification) _probeVisiblePage();
         return false;
       },
-      child: GestureDetector(
-        onTap: _toggleUi,
+      child: AutoScrollArea(
+        key: _autoScroll,
+        controller: _scroll,
+        child: GestureDetector(
+        onTap: () {
+          // The click that stopped the auto-scroll does nothing else.
+          if (_autoScroll.currentState?.justStopped ?? false) return;
+          _toggleUi();
+        },
         child: ListView.builder(
           key: ValueKey('v-$_index-$_variant'),
           controller: _scroll,
@@ -1697,6 +1713,7 @@ class _ReaderPageState extends State<ReaderPage> {
             );
           },
         ),
+      ),
       ),
     );
   }
