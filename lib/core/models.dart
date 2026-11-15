@@ -528,6 +528,10 @@ class Settings {
     this.gridColumns = 0,
     this.reduceMotion = false,
     this.performanceMode = 'auto',
+    this.marathonMode = false,
+    this.readerDim = 0,
+    this.readerWarm = 0,
+    Map<String, List<int>>? pageTrims,
     this.includeSuggestive = true,
     this.checkOnStartup = true,
     this.autoCheckMinutes = 60,
@@ -545,7 +549,8 @@ class Settings {
     this.pageFit = PageFit.contain,
     this.langChosen = false,
     List<String>? recentSearches,
-  })  : comicLangs = comicLangs ?? <String>['en', 'fr'],
+  })  : pageTrims = pageTrims ?? <String, List<int>>{},
+        comicLangs = comicLangs ?? <String>['en', 'fr'],
         blockedSources = blockedSources ?? <String>[],
         recentSearches = recentSearches ?? <String>[];
 
@@ -565,6 +570,16 @@ class Settings {
 
   /// « auto » (léger sur les PC à 4 cœurs ou moins), « light », « full ».
   String performanceMode;
+
+  /// Lecture verticale : le chapitre suivant s'ouvre tout seul à la fin.
+  bool marathonMode;
+
+  /// Filtre du lecteur : assombrissement (0–0.7) et lumière chaude (0–1).
+  double readerDim;
+  double readerWarm;
+
+  /// Pages de crédits / pub ignorées par site : [début, fin].
+  Map<String, List<int>> pageTrims;
   bool includeSuggestive;
   bool checkOnStartup;
 
@@ -619,6 +634,10 @@ class Settings {
         'gridColumns': gridColumns,
         'reduceMotion': reduceMotion,
         'performanceMode': performanceMode,
+        'marathonMode': marathonMode,
+        'readerDim': readerDim,
+        'readerWarm': readerWarm,
+        'pageTrims': pageTrims,
         'includeSuggestive': includeSuggestive,
         'checkOnStartup': checkOnStartup,
         'cacheOnRead': cacheOnRead,
@@ -648,6 +667,17 @@ class Settings {
       performanceMode: const {'auto', 'light', 'full'}.contains(json['performanceMode'])
           ? json['performanceMode'] as String
           : 'auto',
+      marathonMode: (json['marathonMode'] as bool?) ?? false,
+      readerDim: ((json['readerDim'] as num?) ?? 0).toDouble().clamp(0.0, 0.7),
+      readerWarm: ((json['readerWarm'] as num?) ?? 0).toDouble().clamp(0.0, 1.0),
+      pageTrims: {
+        if (json['pageTrims'] is Map)
+          for (final e in (json['pageTrims'] as Map).entries)
+            if (e.value is List && (e.value as List).length == 2)
+              '${e.key}': [
+                for (final v in e.value as List) (v is int ? v : 0).clamp(0, 9),
+              ],
+      },
       includeSuggestive: (json['includeSuggestive'] as bool?) ?? true,
       checkOnStartup: (json['checkOnStartup'] as bool?) ?? true,
       cacheOnRead: (json['cacheOnRead'] as bool?) ?? true,

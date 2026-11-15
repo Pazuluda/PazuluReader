@@ -17,6 +17,7 @@ Future<void> resumeInPazulu(
   String? chapterHint,
   String? siteId,
   String? chapterUrl,
+  int? exactPage,
 }) async {
   final app = AppScope.read(context);
   List<ChapterGroup> groups;
@@ -78,6 +79,12 @@ Future<void> resumeInPazulu(
     final hint = ChapterKey.parse(chapterHint).id;
     final found = readable.indexWhere((group) => group.key.id == hint);
     if (found >= 0) { index = found; page = 0; }
+  }
+  // A saved moment: that chapter and page exactly.
+  if (exactPage != null && chapterHint != null) {
+    final hint = ChapterKey.parse(chapterHint).id;
+    final found = readable.indexWhere((group) => group.key.id == hint);
+    if (found >= 0) { index = found; page = exactPage; }
   }
   await pushPage(context, ReaderPage(
     work: work, groups: readable, initialIndex: index, initialPage: page,

@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -132,6 +133,7 @@ class _ReaderPageState extends State<ReaderPage> {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
     _app = AppScope.read(context);
     _app.readerOpened();
     _seenRevision = _app.readerRevision(widget.work.id);
@@ -156,6 +158,8 @@ class _ReaderPageState extends State<ReaderPage> {
     _cancel?.cancel();
     _siteStartupTimer?.cancel();
     _hideTimer?.cancel();
+    _marathon?.cancel();
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     _scroll.dispose();
     _pager?.dispose();
     _focus.dispose();
@@ -504,12 +508,12 @@ class _ReaderPageState extends State<ReaderPage> {
     final start = pages.isEmpty ? 0 : _startPage.clamp(0, pages.length - 1);
     setState(() {
       _localPages = local;
-      _pages = pages;
+      _pages = _trimmed(pages);
       _loading = false;
       _error = null;
-      _page = start;
+      _page = start.clamp(0, _pages!.isEmpty ? 0 : _pages!.length - 1);
       _routeHeaders = headers;
-      _keys = List.generate(pages.length, (_) => GlobalKey());
+      _keys = List.generate(_pages!.length, (_) => GlobalKey());
       _pager = PageController(initialPage: _pagerIndexFor(start));
     });
     if (_mode == ReaderMode.vertical && start > 0) {
@@ -848,9 +852,96 @@ class _ReaderPageState extends State<ReaderPage> {
   // -------------------------------------------------------------------------
 
   bool get _hasNext => _index + 1 < _groups.length;
+
+  /// Credit / ad pages of a site skipped (set per site in the reading
+  /// options): [first, last] pages. Never applied to very short chapters.
+  List<PageRef> _trimmed(List<PageRef> pages) {
+    final id = _current?.sourceId;
+    final trim = id == null ? null : _app.settings.pageTrims[id];
+    if (trim == null) return pages;
+    final first = trim[0], last = trim[1];
+    if (first + last == 0 || pages.length < first + last + 3) return pages;
+    return pages.sublist(first, pages.length - last);
+  }
+
+  // ---- Marathon : chapitre suivant tout seul à la fin (vertical) ----
+  Timer? _marathon;
+  int _marathonLeft = 0;
+
+  void _checkMarathon() {
+    if (!_app.settings.marathonMode || _mode != ReaderMode.vertical || !_hasNext || !_scroll.hasClients) {
+      return;
+    }
+    final pos = _scroll.position;
+    final atEnd = pos.pixels >= pos.maxScrollExtent - 4;
+    if (atEnd && _marathon == null) {
+      setState(() => _marathonLeft = 3);
+      _marathon = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (!mounted) return t.cancel();
+        if (_marathonLeft <= 1) {
+          t.cancel();
+          _marathon = null;
+          _nextChapter();
+        } else {
+          setState(() => _marathonLeft--);
+        }
+      });
+    } else if (!atEnd && pos.pixels < pos.maxScrollExtent - 200 && _marathon != null) {
+      _cancelMarathon();
+    }
+  }
+
+  void _cancelMarathon() {
+    _marathon?.cancel();
+    _marathon = null;
+    if (mounted && _marathonLeft != 0) setState(() => _marathonLeft = 0);
+  }
+
+  // ---- Zoom (Ctrl + molette, double-clic) en lecture verticale ----
+  bool _ctrlDown = false;
+  double? _widthBeforeZoom;
+
+  bool _onHardwareKey(KeyEvent e) {
+    final ctrl = HardwareKeyboard.instance.isControlPressed;
+    if (ctrl != _ctrlDown && mounted) setState(() => _ctrlDown = ctrl);
+    return false;
+  }
+
+  void _zoomBy(double delta) {
+    final w = (_app.settings.verticalMaxWidth + delta).clamp(480.0, 1800.0);
+    _app.updateSettings((s) => s.verticalMaxWidth = w);
+    setState(() {});
+  }
+
+  void _toggleZoom() {
+    final screen = MediaQuery.sizeOf(context).width;
+    final current = _app.settings.verticalMaxWidth;
+    if (_widthBeforeZoom == null && current < screen * 0.95) {
+      _widthBeforeZoom = current;
+      _app.updateSettings((s) => s.verticalMaxWidth = screen.clamp(480.0, 1800.0));
+    } else {
+      final back = _widthBeforeZoom ?? 900;
+      _widthBeforeZoom = null;
+      _app.updateSettings((s) => s.verticalMaxWidth = back);
+    }
+    setState(() {});
+  }
+
+  // ---- Moments ----
+  void _toggleMoment() {
+    final added = _app.toggleMoment(widget.work, _group.key, _page);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 2),
+      content: Text(added
+          ? 'Moment gardé : ${_group.key.longLabel}, page ${_page + 1} (Mes moments, Ctrl+K)'
+          : 'Moment retiré'),
+    ));
+    setState(() {});
+  }
   bool get _hasPrev => _index > 0;
 
   void _nextChapter() {
+    _cancelMarathon();
     if (!_hasNext) return;
     _flushSave();
     _app.setRead(widget.work, [_group.key], true);
@@ -858,6 +949,7 @@ class _ReaderPageState extends State<ReaderPage> {
   }
 
   void _prevChapter() {
+    _cancelMarathon();
     if (!_hasPrev) return;
     _openChapter(_index - 1);
   }
@@ -1043,6 +1135,7 @@ class _ReaderPageState extends State<ReaderPage> {
                   fontWeight: FontWeight.w700, letterSpacing: 0.6)),
             );
         return SafeArea(
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Column(
@@ -1129,12 +1222,82 @@ class _ReaderPageState extends State<ReaderPage> {
                       ),
                     ),
                 ]),
+                label('ENCHAÎNEMENT'),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Mode marathon'),
+                  subtitle: const Text('Lecture verticale : arrivé en bas du chapitre, le suivant '
+                      's\'ouvre tout seul après 3 s (« Rester ici » pour annuler).'),
+                  value: _app.settings.marathonMode,
+                  onChanged: (v) => apply(() {
+                    _app.updateSettings((s) => s.marathonMode = v);
+                    if (!v) _cancelMarathon();
+                  }),
+                ),
+                label('SOIRÉE  ·  ASSOMBRIR ${(_app.settings.readerDim * 100).round()} %  ·  '
+                    'LUMIÈRE CHAUDE ${(_app.settings.readerWarm * 100).round()} %'),
+                Slider(
+                  value: _app.settings.readerDim,
+                  max: 0.7,
+                  divisions: 14,
+                  label: 'Assombrir ${(_app.settings.readerDim * 100).round()} %',
+                  onChanged: (v) => apply(() {
+                    _app.updateSettings((s) => s.readerDim = v);
+                    setState(() {});
+                  }),
+                ),
+                Slider(
+                  value: _app.settings.readerWarm,
+                  divisions: 10,
+                  label: 'Lumière chaude ${(_app.settings.readerWarm * 100).round()} %',
+                  onChanged: (v) => apply(() {
+                    _app.updateSettings((s) => s.readerWarm = v);
+                    setState(() {});
+                  }),
+                ),
+                if (_current != null && !_current!.isExternal) ...[
+                  label('PAGES DE CRÉDITS / PUB IGNORÉES SUR ${(_current!.group).toUpperCase()}'),
+                  Builder(builder: (_) {
+                    final id = _current!.sourceId;
+                    final trim = _app.settings.pageTrims[id] ?? const [0, 0];
+                    void set(int i, int v) => apply(() {
+                          final next = [...trim];
+                          next[i] = v;
+                          _app.updateSettings((s) {
+                            if (next[0] == 0 && next[1] == 0) {
+                              s.pageTrims.remove(id);
+                            } else {
+                              s.pageTrims[id] = next;
+                            }
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text('Appliqué à partir du prochain chapitre de ce site.')));
+                        });
+                    Widget pick(String title, int i) => Row(children: [
+                          Expanded(child: Text(title)),
+                          DropdownButton<int>(
+                            value: trim[i],
+                            items: [
+                              for (var v = 0; v <= 5; v++)
+                                DropdownMenuItem(value: v, child: Text(v == 0 ? 'aucune' : '$v page${v > 1 ? 's' : ''}')),
+                            ],
+                            onChanged: (v) => set(i, v ?? 0),
+                          ),
+                        ]);
+                    return Column(children: [
+                      pick('Au début du chapitre', 0),
+                      pick('À la fin du chapitre', 1),
+                    ]);
+                  }),
+                ],
                 const SizedBox(height: 16),
                 Text('Raccourcis : ← → pages · P / N chapitres · M mode · W ajustement · '
-                    'D double page · clic molette défilement automatique (vertical) · Échap quitter',
+                    'D double page · B garder ce moment · clic molette défilement automatique · '
+                    'Ctrl + molette ou double-clic zoom (vertical) · Échap quitter',
                     style: TextStyle(color: p.muted, fontSize: 12)),
               ],
             ),
+          ),
           ),
         );
       }),
@@ -1246,6 +1409,8 @@ class _ReaderPageState extends State<ReaderPage> {
       _openChapterList();
     } else if (k == LogicalKeyboardKey.keyL) {
       _openReaderSheet();
+    } else if (k == LogicalKeyboardKey.keyB) {
+      _toggleMoment();
     } else if (k == LogicalKeyboardKey.keyS) {
       _openReaderSettings();
     } else if (k == LogicalKeyboardKey.space ||
@@ -1426,12 +1591,12 @@ class _ReaderPageState extends State<ReaderPage> {
       setState(() {
         _siteReader = false;
         _siteBridge = null;
-        _pages = pages;
+        _pages = _trimmed(pages);
         _localPages = null;
-        _page = start;
+        _page = start.clamp(0, _pages!.isEmpty ? 0 : _pages!.length - 1);
         _error = null;
         _loading = false;
-        _keys = List.generate(pages.length, (_) => GlobalKey());
+        _keys = List.generate(_pages!.length, (_) => GlobalKey());
         _pager = PageController(initialPage: _pagerIndexFor(start));
       });
       _app.reportChapterSuccess(chapter);
@@ -1579,7 +1744,7 @@ class _ReaderPageState extends State<ReaderPage> {
         backgroundColor: _backgrounds[_background],
         body: Stack(
           children: [
-            Positioned.fill(child: _body()),
+            Positioned.fill(child: _filtered(_body())),
             _progressLine(),
             _topBar(),
             _bottomBar(),
@@ -1587,6 +1752,17 @@ class _ReaderPageState extends State<ReaderPage> {
         ),
       ),
     );
+  }
+
+  /// Soirée : assombrissement et lumière chaude sur les pages seulement
+  /// (les barres restent normales).
+  Widget _filtered(Widget child) {
+    final dim = _app.settings.readerDim, warm = _app.settings.readerWarm;
+    if (dim <= 0 && warm <= 0) return child;
+    final k = 1 - dim;
+    final color = Color.fromARGB(255, (255 * k).round(), (255 * (1 - 0.15 * warm) * k).round(),
+        (255 * (1 - 0.40 * warm) * k).round());
+    return ColorFiltered(colorFilter: ColorFilter.mode(color, BlendMode.modulate), child: child);
   }
 
   Widget _body() {
@@ -1682,21 +1858,34 @@ class _ReaderPageState extends State<ReaderPage> {
     final screenH = MediaQuery.sizeOf(context).height;
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
-        if (n is ScrollUpdateNotification || n is ScrollEndNotification) _probeVisiblePage();
+        if (n is ScrollUpdateNotification || n is ScrollEndNotification) {
+          _probeVisiblePage();
+          _checkMarathon();
+        }
         return false;
       },
       child: AutoScrollArea(
         key: _autoScroll,
         controller: _scroll,
+        child: Listener(
+        // Ctrl + molette : plus large / plus étroit (la liste ne défile
+        // pas pendant ce temps).
+        onPointerSignal: (e) {
+          if (e is PointerScrollEvent && HardwareKeyboard.instance.isControlPressed) {
+            _zoomBy(e.scrollDelta.dy > 0 ? -80 : 80);
+          }
+        },
         child: GestureDetector(
         onTap: () {
           // The click that stopped the auto-scroll does nothing else.
           if (_autoScroll.currentState?.justStopped ?? false) return;
           _toggleUi();
         },
+        onDoubleTap: _toggleZoom,
         child: ListView.builder(
           key: ValueKey('v-$_index-$_variant'),
           controller: _scroll,
+          physics: _ctrlDown ? const NeverScrollableScrollPhysics() : null,
           cacheExtent: screenH * 2,
           // The first page starts below the top panel and the last one
           // above the bottom bar: nothing is hidden behind the controls.
@@ -1713,6 +1902,7 @@ class _ReaderPageState extends State<ReaderPage> {
             );
           },
         ),
+      ),
       ),
       ),
     );
@@ -1789,6 +1979,13 @@ class _ReaderPageState extends State<ReaderPage> {
           Text('Fin du ${_group.key.longLabel.toLowerCase()}',
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: PazuluSpace.md),
+          if (_hasNext && _marathonLeft > 0) ...[
+            Text('Mode marathon : ${_groups[_index + 1].key.longLabel} dans $_marathonLeft s',
+                style: TextStyle(color: context.pal.bright, fontWeight: FontWeight.w700)),
+            const SizedBox(height: PazuluSpace.sm),
+            TextButton(onPressed: _cancelMarathon, child: const Text('Rester ici')),
+            const SizedBox(height: PazuluSpace.sm),
+          ],
           if (_hasNext)
             GlowButton(
               onPressed: _nextChapter,
@@ -2005,6 +2202,13 @@ class _ReaderPageState extends State<ReaderPage> {
                               ReaderMode.rtl => Icons.west_rounded,
                             },
                             onPressed: _cycleMode,
+                          ),
+                          _chromeButton(
+                            tooltip: 'Garder ce moment (B)',
+                            icon: _app.isMoment(widget.work.id, _group.key.id, _page)
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_border_rounded,
+                            onPressed: _toggleMoment,
                           ),
                           _chromeButton(tooltip: 'Réglages de lecture (S)', icon: Icons.tune_rounded,
                               onPressed: _openReaderSettings),
