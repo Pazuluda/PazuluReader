@@ -31,7 +31,7 @@ class AppUpdateInfo {
 /// configuré, la fonction reste simplement inactive).
 ///
 /// Installation : le ZIP Windows de la release est téléchargé dans le
-/// dossier temporaire, puis un petit script attend la fermeture de Pazulu,
+/// dossier temporaire, puis un petit script invisible attend la fermeture de Pazulu,
 /// décompresse, remplace les fichiers du dossier de l'application et
 /// relance Pazulu. Les données (bibliothèque, progression, réglages) sont
 /// dans %APPDATA% : elles ne sont jamais touchées.
@@ -134,46 +134,67 @@ class AppUpdater {
     return file;
   }
 
-  /// Batch script: waits for Pazulu to close, unzips, copies over the app
-  /// folder, starts Pazulu again.
+  /// PowerShell script, run hidden: waits for Pazulu to close (and closes
+  /// that one process itself after 15 s if it lingers), unzips, copies over
+  /// the app folder, starts Pazulu again. Only PowerShell commands, no
+  /// console program: no black window opens. Errors go to update.log next
+  /// to the downloaded file, and Pazulu restarts in its current version.
   static String installScript({required String zip, required String appDir, required String exe, required int pid}) {
-    String q(String s) => s.replaceAll('"', '');
+    String q(String s) => "'${s.replaceAll("'", "''")}'";
     return [
-      '@echo off',
-      'chcp 65001 >nul',
-      'title Mise a jour de Pazulu Reader',
-      'set "ZIP=${q(zip)}"',
-      'set "DST=${q(appDir)}"',
-      'set "TMPX=%~dp0extracted"',
-      'echo Mise a jour de Pazulu Reader, patientez...',
-      ':wait',
-      'tasklist /FI "PID eq $pid" 2>nul | find "$pid" >nul && (timeout /t 1 /nobreak >nul & goto wait)',
-      'if exist "%TMPX%" rmdir /s /q "%TMPX%"',
-      'powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath \$env:ZIP -DestinationPath \$env:TMPX -Force"',
-      'if errorlevel 1 goto fail',
-      'set "SRC=%TMPX%"',
-      'if not exist "%SRC%\\${q(exe)}" for /d %%D in ("%TMPX%\\*") do if exist "%%D\\${q(exe)}" set "SRC=%%D"',
-      'if not exist "%SRC%\\${q(exe)}" goto fail',
-      'robocopy "%SRC%" "%DST%" /E /R:3 /W:1 /NFL /NDL /NJH /NJS /NP >nul',
-      'if errorlevel 8 goto fail',
-      'start "" "%DST%\\${q(exe)}"',
-      'exit /b 0',
-      ':fail',
-      'echo La mise a jour a echoue. Pazulu va redemarrer dans sa version actuelle.',
-      'timeout /t 5 >nul',
-      'start "" "%DST%\\${q(exe)}"',
-      'exit /b 1',
+      r"$ErrorActionPreference = 'Stop'",
+      '\$zip = ${q(zip)}',
+      '\$dst = ${q(appDir)}',
+      '\$exe = ${q(exe)}',
+      '\$appPid = $pid',
+      r"$work = Split-Path -Parent $zip",
+      r"$tmp = Join-Path $work 'extracted'",
+      r"$log = Join-Path $work 'update.log'",
+      'try {',
+      r"  $p = Get-Process -Id $appPid -ErrorAction SilentlyContinue",
+      r"  if ($p -and -not $p.WaitForExit(15000)) {",
+      r"    Stop-Process -Id $appPid -Force -ErrorAction SilentlyContinue",
+      r"    $p.WaitForExit(5000) | Out-Null",
+      '  }',
+      '  Start-Sleep -Milliseconds 700',
+      r"  if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Recurse -Force }",
+      r"  Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force",
+      r"  $src = $tmp",
+      r"  if (-not (Test-Path -LiteralPath (Join-Path $src $exe))) {",
+      r"    $d = Get-ChildItem -LiteralPath $tmp -Directory | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName $exe) } | Select-Object -First 1",
+      r"    if ($d) { $src = $d.FullName }",
+      '  }',
+      r"  if (-not (Test-Path -LiteralPath (Join-Path $src $exe))) { throw 'Programme absent du ZIP.' }",
+      '  for (\$i = 0; \$i -lt 10; \$i++) {',
+      '    try {',
+      r"      Get-ChildItem -LiteralPath $src | Copy-Item -Destination $dst -Recurse -Force",
+      '      break',
+      '    } catch {',
+      r"      if ($i -ge 9) { throw }",
+      '      Start-Sleep -Seconds 1',
+      '    }',
+      '  }',
+      r"  Add-Content -LiteralPath $log -Value ((Get-Date -Format s) + ' mise a jour installee')",
+      '} catch {',
+      r"  Add-Content -LiteralPath $log -Value ((Get-Date -Format s) + ' echec : ' + $_)",
+      '}',
+      r"Start-Process -FilePath (Join-Path $dst $exe) -WorkingDirectory $dst",
       '',
     ].join('\r\n');
   }
 
-  /// Starts the install script, detached. The caller then quits Pazulu.
+  /// Starts the install script, hidden and detached. The caller then quits
+  /// Pazulu.
   Future<void> launchInstaller(File zip) async {
     final exePath = Platform.resolvedExecutable;
     final appDir = File(exePath).parent.path;
     final exe = exePath.split(Platform.pathSeparator).last;
-    final script = File('${zip.parent.path}${Platform.pathSeparator}installer.cmd');
-    await script.writeAsString(installScript(zip: zip.path, appDir: appDir, exe: exe, pid: pid));
-    await Process.start('cmd.exe', ['/c', script.path], mode: ProcessStartMode.detached, runInShell: false);
+    final script = File('${zip.parent.path}${Platform.pathSeparator}installer.ps1');
+    // UTF-8 with BOM: Windows PowerShell 5 reads accented paths correctly.
+    await script.writeAsBytes([0xEF, 0xBB, 0xBF, ...utf8.encode(installScript(zip: zip.path, appDir: appDir, exe: exe, pid: pid))]);
+    await Process.start('powershell.exe', [
+      '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden',
+      '-File', script.path,
+    ], mode: ProcessStartMode.detached, runInShell: false);
   }
 }

@@ -6,8 +6,9 @@ import '../app_scope.dart';
 import '../format.dart';
 import 'common.dart';
 
-/// « Nouvelle version » : notes de version, taille, puis téléchargement et
-/// installation (Pazulu redémarre tout seul). Style Kiosque.
+/// « Mise à jour » : un seul appui suffit. La fenêtre cherche la nouvelle
+/// version sur GitHub, la télécharge et l'installe tout de suite (Pazulu se
+/// ferme et redémarre tout seul) ; à jour = simple message. Style Kiosque.
 Future<void> showUpdateDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -16,8 +17,21 @@ Future<void> showUpdateDialog(BuildContext context) {
   );
 }
 
-class _UpdateDialog extends StatelessWidget {
+class _UpdateDialog extends StatefulWidget {
   const _UpdateDialog();
+
+  @override
+  State<_UpdateDialog> createState() => _UpdateDialogState();
+}
+
+class _UpdateDialogState extends State<_UpdateDialog> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) AppScope.read(context).updateNow();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,9 +134,10 @@ class _UpdateDialog extends StatelessWidget {
             icon: Icons.refresh_rounded,
             onPressed: app.checkingUpdate ? null : app.checkForAppUpdate,
           ),
+        // Only shown after a failed attempt: try again.
         if (info != null && !busy)
           GlowButton(
-            label: 'Installer v${info.version}',
+            label: 'Réessayer v${info.version}',
             icon: Icons.download_rounded,
             onPressed: app.installAppUpdate,
           ),

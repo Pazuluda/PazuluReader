@@ -32,9 +32,16 @@ void main() {
 
   test('script d’installation : attend, décompresse, copie, relance', () {
     final s = AppUpdater.installScript(zip: r'C:\T\u.zip', appDir: r'C:\App', exe: 'pazulu_reader.exe', pid: 4242);
-    expect(s, contains('PID eq 4242'));
-    expect(s, contains(r'$env:ZIP'));
-    expect(s, contains('robocopy "%SRC%" "%DST%"'));
-    expect(s, contains(r'start "" "%DST%\pazulu_reader.exe"'));
+    expect(s, contains(r'$appPid = 4242'));
+    expect(s, contains(r"$zip = 'C:\T\u.zip'"));
+    expect(s, contains('Expand-Archive'));
+    expect(s, contains('Copy-Item -Destination \$dst -Recurse -Force'));
+    expect(s, contains('Start-Process -FilePath (Join-Path \$dst \$exe)'));
+    // Pas de programme console (fenêtre noire) : ni cmd, ni robocopy, ni tasklist.
+    expect(s, isNot(contains('robocopy')));
+    expect(s, isNot(contains('tasklist')));
+    // Apostrophes des chemins échappées.
+    expect(AppUpdater.installScript(zip: "C:\\l'a.zip", appDir: 'C:\\A', exe: 'p.exe', pid: 1),
+        contains("'C:\\l''a.zip'"));
   });
 }
