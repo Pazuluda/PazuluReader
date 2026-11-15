@@ -7,6 +7,7 @@ import '../../core/models.dart';
 import '../../core/site_index.dart';
 import '../../design/theme.dart';
 import '../app_scope.dart';
+import '../moments_page.dart';
 import '../read_actions.dart';
 import '../work_page.dart';
 import 'common.dart';
@@ -159,6 +160,11 @@ class _PaletteState extends State<_Palette> {
           'Découvrir · tous les sites', (_) => widget.searchEverywhere(q)));
     }
 
+    if (q.isEmpty || SiteTitleIndex.norm('mes moments marque page scenes').contains(n)) {
+      out.add(_Item(Icons.bookmarks_rounded, 'Mes moments',
+          '${app.moments.length} page(s) marquée(s) dans le lecteur',
+          (ctx) => pushPage(ctx, const MomentsPage())));
+    }
     for (var i = 0; i < widget.tabs.length; i++) {
       final t = widget.tabs[i];
       if (q.isNotEmpty && !SiteTitleIndex.norm(t).contains(n)) continue;

@@ -29,6 +29,7 @@ import 'bookmarks_import.dart';
 import 'coverage.dart';
 import 'device_profile.dart';
 import 'host_gate.dart';
+import 'moments.dart';
 import 'language_consensus.dart';
 import 'app_update.dart';
 import 'schedule/mangaupdates.dart';
@@ -63,7 +64,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.5.0';
+const String appVersion = '1.6.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -445,6 +446,7 @@ class AppState extends ChangeNotifier {
       onStep?.call('Préparation du moteur de lecture…');
       await _initEngine(dir);
       await _loadLocatedReaders();
+      await _loadMoments();
       final diagDir = Directory('${dir.path}${Platform.pathSeparator}diagnostics');
       PublicCatalogSource.onDiagnosticPage = (sourceId, kind, url, body) {
         // One file per site and kind (overwritten), 2 MB max.
@@ -2761,6 +2763,73 @@ class AppState extends ChangeNotifier {
   }
 
   bool inLibrary(String workId) => _data.entries.containsKey(workId);
+
+  // ---- Mes moments (pages marquées dans le lecteur) ----
+
+  final List<Moment> moments = [];
+
+  File? get _momentsFile => _supportDir == null
+      ? null
+      : File('${_supportDir!.path}${Platform.pathSeparator}moments.json');
+
+  Future<void> _loadMoments() async {
+    final f = _momentsFile;
+    if (f == null || !await f.exists()) return;
+    try {
+      final raw = jsonDecode(await f.readAsString());
+      if (raw is List) {
+        moments
+          ..clear()
+          ..addAll(raw.map(Moment.fromJson).whereType<Moment>());
+      }
+    } catch (_) {
+      // damaged file: kept aside, a new list starts
+    }
+  }
+
+  Future<void> _saveMoments() async {
+    final f = _momentsFile;
+    if (f == null) return;
+    try {
+      final tmp = File('${f.path}.tmp');
+      await tmp.writeAsString(jsonEncode([for (final m in moments) m.toJson()]), flush: true);
+      if (await f.exists()) await f.delete();
+      await tmp.rename(f.path);
+    } catch (e) {
+      AppLog.info('Moments non enregistrés : $e');
+    }
+  }
+
+  /// Marks (or unmarks if already there) a page as a moment.
+  bool toggleMoment(WorkInfo work, ChapterKey key, int page) {
+    final k = '${work.id}|${key.id}|$page';
+    final i = moments.indexWhere((m) => m.key == k);
+    final added = i < 0;
+    if (added) {
+      moments.insert(0, Moment(work: work, chapterId: key.id, chapterLabel: key.longLabel,
+          page: page, at: DateTime.now()));
+    } else {
+      moments.removeAt(i);
+    }
+    unawaited(_saveMoments());
+    notifyListeners();
+    return added;
+  }
+
+  bool isMoment(String workId, String chapterId, int page) =>
+      moments.any((m) => m.key == '$workId|$chapterId|$page');
+
+  void removeMoment(Moment m) {
+    moments.remove(m);
+    unawaited(_saveMoments());
+    notifyListeners();
+  }
+
+  void setMomentNote(Moment m, String note) {
+    m.note = note.trim();
+    unawaited(_saveMoments());
+    notifyListeners();
+  }
 
   bool _enriching = false;
 
