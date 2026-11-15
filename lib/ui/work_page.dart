@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/chapter_key.dart';
 import '../core/chapters.dart';
@@ -269,6 +270,85 @@ class _WorkPageState extends State<WorkPage> {
       return;
     }
     await _open(groups, i);
+  }
+
+  /// Last chapter whose « lu » circle was clicked: Maj + clic on another
+  /// circle applies the same change to every chapter in between.
+  int? _lastToggled;
+
+  void _toggleRead(List<ChapterGroup> groups, int index, Set<String> read) {
+    final app = AppScope.read(context);
+    final value = !read.contains(groups[index].key.id);
+    final last = _lastToggled;
+    if (HardwareKeyboard.instance.isShiftPressed && last != null && last != index && last < groups.length) {
+      final from = last < index ? last : index;
+      final to = last < index ? index : last;
+      app.setRead(widget.work, groups.sublist(from, to + 1).map((g) => g.key), value);
+      _snack('${to - from + 1} chapitres marqués comme ${value ? 'lus' : 'non lus'} '
+          '(${groups[from].key.label} → ${groups[to].key.label})');
+    } else {
+      app.setRead(widget.work, [groups[index].key], value);
+    }
+    _lastToggled = index;
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  /// Every chapter at once, read or not read.
+  Future<void> _markAll(List<ChapterGroup> groups, bool value) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(value ? 'Tout marquer comme lu ?' : 'Tout marquer comme non lu ?'),
+        content: Text('${groups.length} chapitres de « ${widget.work.title} ».'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(value ? 'Tout lu' : 'Tout non lu')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    AppScope.read(context).setRead(widget.work, groups.map((g) => g.key), value);
+    _snack('${groups.length} chapitres marqués comme ${value ? 'lus' : 'non lus'}');
+  }
+
+  /// Clic droit sur un chapitre : marquer en groupe à partir de lui.
+  Future<void> _chapterMenu(List<ChapterGroup> groups, int index, Offset at) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final label = groups[index].key.label;
+    final choice = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
+      items: [
+        PopupMenuItem(value: 'upto', child: Text('Lus jusqu\'au $label (inclus)')),
+        PopupMenuItem(value: 'before', child: Text('Lus avant le $label')),
+        PopupMenuItem(value: 'from', child: Text('Non lus à partir du $label')),
+        const PopupMenuDivider(),
+        const PopupMenuItem(value: 'all', child: Text('Tout marquer comme lu')),
+        const PopupMenuItem(value: 'none', child: Text('Tout marquer comme non lu')),
+      ],
+    );
+    if (choice == null || !mounted) return;
+    final app = AppScope.read(context);
+    switch (choice) {
+      case 'upto':
+        app.setRead(widget.work, groups.take(index + 1).map((g) => g.key), true);
+        _snack('${index + 1} chapitres marqués comme lus (jusqu\'au $label)');
+      case 'before':
+        if (index == 0) return;
+        app.setRead(widget.work, groups.take(index).map((g) => g.key), true);
+        _snack('$index chapitres marqués comme lus (avant le $label)');
+      case 'from':
+        app.setRead(widget.work, groups.skip(index).map((g) => g.key), false);
+        _snack('${groups.length - index} chapitres marqués comme non lus (à partir du $label)');
+      case 'all':
+        await _markAll(groups, true);
+      case 'none':
+        await _markAll(groups, false);
+    }
   }
 
   Future<void> _markUpTo(List<ChapterGroup> groups) async {
@@ -911,10 +991,29 @@ class _WorkPageState extends State<WorkPage> {
               icon: Icon(Icons.pin_outlined, color: p.text),
               onPressed: () => _jumpTo(groups),
             ),
-            IconButton(
-              tooltip: 'Marquer comme lus jusqu\'au chapitre…',
+            PopupMenuButton<String>(
+              tooltip: 'Marquer comme lus en groupe…',
               icon: Icon(Icons.done_all_rounded, color: p.text),
-              onPressed: () => _markUpTo(groups),
+              onSelected: (v) {
+                switch (v) {
+                  case 'upto':
+                    _markUpTo(groups);
+                  case 'all':
+                    _markAll(groups, true);
+                  case 'none':
+                    _markAll(groups, false);
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'upto', child: Text('Lus jusqu\'au chapitre…')),
+                PopupMenuItem(value: 'all', child: Text('Tout marquer comme lu')),
+                PopupMenuItem(value: 'none', child: Text('Tout marquer comme non lu')),
+                PopupMenuDivider(),
+                PopupMenuItem(enabled: false, child: Text(
+                    'Astuces : clic droit sur un chapitre pour marquer à partir de lui · '
+                    'Maj + clic sur deux cercles « lu » pour marquer tout l\'intervalle',
+                    style: TextStyle(fontSize: 12))),
+              ],
             ),
           ],
           const SizedBox(width: PazuluSpace.lg),
@@ -1084,7 +1183,8 @@ class _WorkPageState extends State<WorkPage> {
                       page: isCurrent ? (entry?.progress.lastPage ?? 0) : 0,
                       variant: v);
                 },
-                onToggleRead: () => app.setRead(widget.work, [g.key], !read.contains(g.key.id)),
+                onToggleRead: () => _toggleRead(groups, index, read),
+                onMenu: (at) => _chapterMenu(groups, index, at),
                 download: downloadable.isEmpty
                     ? null
                     : _DownloadState(
@@ -1230,6 +1330,7 @@ class _ChapterRow extends StatefulWidget {
     required this.onOpen,
     required this.onToggleRead,
     required this.onMarkPrevious,
+    this.onMenu,
     required this.isUnconfirmed,
     this.aheadUnconfirmed = false,
     this.fallbackDate,
@@ -1255,6 +1356,9 @@ class _ChapterRow extends StatefulWidget {
   final ValueChanged<SourceChapter?> onOpen;
   final VoidCallback onToggleRead;
   final VoidCallback onMarkPrevious;
+
+  /// Clic droit : menu « marquer en groupe ».
+  final void Function(Offset globalPosition)? onMenu;
 
   @override
   State<_ChapterRow> createState() => _ChapterRowState();
@@ -1371,6 +1475,9 @@ class _ChapterRowState extends State<_ChapterRow> {
             borderRadius: BorderRadius.circular(12),
             onTap: () => widget.onOpen(null),
             onLongPress: widget.onMarkPrevious,
+            onSecondaryTapUp: widget.onMenu == null
+                ? null
+                : (d) => widget.onMenu!(d.globalPosition),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
               child: Row(
@@ -1466,7 +1573,8 @@ class _ChapterRowState extends State<_ChapterRow> {
                   readers,
                   if (widget.download != null) _DownloadButton(state: widget.download!),
                   IconButton(
-                    tooltip: widget.read ? 'Marquer comme non lu' : 'Marquer comme lu',
+                    tooltip: '${widget.read ? 'Marquer comme non lu' : 'Marquer comme lu'}'
+                        ' · Maj + clic : tout l\'intervalle depuis le dernier cercle cliqué',
                     icon: Icon(widget.read ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                         size: 20, color: widget.read ? p.success : p.muted),
                     onPressed: widget.onToggleRead,
