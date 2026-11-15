@@ -47,8 +47,11 @@ class ChapterConsensus {
     final shifted = <String>{};
     for (final e in voters.entries) {
       final others = <double, List<DateTime>>{};
+      final lang = e.key.split('|').last;
       for (final o in voters.entries) {
-        if (o.key == e.key) continue;
+        // Same language only: a French translation released a week after
+        // the English chapter is not a numbering offset.
+        if (o.key == e.key || !o.key.endsWith('|$lang')) continue;
         for (final c in o.value) {
           if (c.publishedAt != null) others.putIfAbsent(c.key.number!, () => []).add(c.publishedAt!);
         }
