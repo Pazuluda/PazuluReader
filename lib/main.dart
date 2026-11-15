@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'core/app_state.dart';
 import 'core/device_profile.dart';
+import 'core/win_window.dart';
 import 'core/log.dart';
 import 'design/theme.dart';
 import 'ui/app_scope.dart';
@@ -14,8 +15,10 @@ import 'ui/shell.dart';
 import 'ui/splash/splash_screen.dart';
 import 'ui/widgets/common.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Started with Windows (« --minimized ») : opens reduced in the taskbar.
+  final startMinimized = args.contains('--minimized');
 
   FlutterError.onError = (details) {
     AppLog.error('Erreur Flutter', details.exception, details.stack);
@@ -73,13 +76,22 @@ Future<void> main() async {
   await progress.finish();
   // Every click, scroll or key press: light mode pauses background work.
   GestureBinding.instance.pointerRouter.addGlobalRoute((_) => state.touch());
-  HardwareKeyboard.instance.addHandler((_) {
+  HardwareKeyboard.instance.addHandler((e) {
     state.touch();
+    // Touche « boss » : Ctrl + Maj + H réduit Pazulu instantanément.
+    if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.keyH &&
+        HardwareKeyboard.instance.isControlPressed && HardwareKeyboard.instance.isShiftPressed) {
+      WinWindow.minimize();
+      return true;
+    }
     return false;
   });
   // A cover that does not load: looked for on AniList / MangaDex.
   CoverImage.onBroken = state.coverFailed;
   runApp(PazuluApp(state: state));
+  if (startMinimized) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => WinWindow.minimize());
+  }
   if (!DeviceProfile.light) {
     Timer(const Duration(seconds: 2), () {
       unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
@@ -97,7 +109,7 @@ class PazuluApp extends StatefulWidget {
   State<PazuluApp> createState() => _PazuluAppState();
 }
 
-class _PazuluAppState extends State<PazuluApp> {
+class _PazuluAppState extends State<PazuluApp> with WidgetsBindingObserver {
   late final AppLifecycleListener _lifecycle;
   String? _themeKey;
   ThemeData? _theme;
@@ -107,11 +119,14 @@ class _PazuluAppState extends State<PazuluApp> {
     super.initState();
     _appearance.value = _lookOf(widget.state);
     widget.state.addListener(_onState);
+    WidgetsBinding.instance.addObserver(this);
+    _followSystemTheme();
     // Enregistre la bibliothèque dès que l'app passe en arrière-plan ou se ferme.
     _lifecycle = AppLifecycleListener(
       onPause: () {
         widget.state.setActive(false);
         unawaited(widget.state.flush());
+        unawaited(AppLog.flush());
       },
       onHide: () {
         widget.state.setActive(false);
@@ -131,6 +146,7 @@ class _PazuluAppState extends State<PazuluApp> {
   void dispose() {
     _lifecycle.dispose();
     widget.state.removeListener(_onState);
+    WidgetsBinding.instance.removeObserver(this);
     _appearance.dispose();
     super.dispose();
   }
@@ -138,9 +154,25 @@ class _PazuluAppState extends State<PazuluApp> {
   final _appearance = ValueNotifier<String>('');
 
   String _lookOf(AppState s) =>
-      '${s.settings.themeId}|${s.settings.darkMode}|${s.settings.reduceMotion}|${DeviceProfile.light}';
+      '${s.settings.themeId}|${s.settings.darkMode}|${s.settings.reduceMotion}|${DeviceProfile.light}|'
+      '${s.settings.followSystemTheme}';
 
-  void _onState() => _appearance.value = _lookOf(widget.state);
+  void _onState() {
+    _appearance.value = _lookOf(widget.state);
+    if (widget.state.settings.followSystemTheme) _followSystemTheme();
+  }
+
+  /// « Suivre le thème de Windows » : clair / sombre comme Windows, y
+  /// compris quand on le change pendant que Pazulu est ouvert.
+  void _followSystemTheme() {
+    final s = widget.state.settings;
+    if (!s.followSystemTheme) return;
+    final dark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+    if (s.darkMode != dark) widget.state.updateSettings((st) => st.darkMode = dark);
+  }
+
+  @override
+  void didChangePlatformBrightness() => _followSystemTheme();
 
   /// Le thème n'est reconstruit que lorsque la palette change.
   ThemeData _themeFor(String id, bool dark) {

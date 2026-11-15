@@ -8,6 +8,7 @@ import '../core/chapter_key.dart';
 import '../core/chapters.dart';
 import '../core/catalogue_audit.dart';
 import '../core/models.dart';
+import '../core/planning.dart';
 import '../core/work_status.dart';
 import '../design/theme.dart';
 import 'anime_page.dart';
@@ -356,11 +357,40 @@ class _WorkPageState extends State<WorkPage> {
   Widget _myStats(BuildContext context) {
     final app = AppScope.read(context);
     final e = app.entry(widget.work.id);
-    if (e == null || (e.progress.readKeys.isEmpty && e.progress.lastKey == null)) {
-      return const SizedBox.shrink();
+    if (e == null) return const SizedBox.shrink();
+    final p = context.pal;
+    // Prochain chapitre estimé (rythme de sortie observé), pour les séries
+    // en cours seulement.
+    String? next;
+    if (app.seriesStatus(e.work).status.active) {
+      final forecast = ReleasePlanner.forecast([e], langs: app.settings.comicLangs)
+          .where((r) => r.state != ReleaseState.hiatus && r.state != ReleaseState.pauseLikely)
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+      if (forecast.isNotEmpty) {
+        final r = forecast.first;
+        final days = r.date.difference(DateTime.now()).inHours / 24;
+        final label = r.chapterLabel == null ? 'Prochain chapitre' : r.chapterLabel!;
+        next = days < 0
+            ? '$label (${r.lang.toUpperCase()}) : attendu depuis ${(-days).ceil()} j'
+            : days < 1
+                ? '$label (${r.lang.toUpperCase()}) : attendu aujourd\'hui'
+                : '$label (${r.lang.toUpperCase()}) : dans ≈ ${days.ceil()} j';
+      }
+    }
+    if (e.progress.readKeys.isEmpty && e.progress.lastKey == null) {
+      return next == null
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Row(children: [
+                Icon(Icons.update_rounded, size: 16, color: p.bright),
+                const SizedBox(width: 8),
+                Text(next, style: TextStyle(color: p.muted, fontSize: 12.5)),
+              ]),
+            );
     }
     final st = app.statsFor(e);
-    final p = context.pal;
     String date(DateTime? d) => d == null ? '—' : '${d.day}/${d.month}/${d.year}';
     final parts = <String>[
       '${st.readCount} chapitre(s) lu(s)',
@@ -372,6 +402,7 @@ class _WorkPageState extends State<WorkPage> {
         st.weeksToCatchUp! < 1
             ? 'rattrapé en quelques jours à ce rythme'
             : 'rattrapé dans ≈ ${st.weeksToCatchUp!.ceil()} semaine(s) à ce rythme',
+      ?next,
     ];
     return Padding(
       padding: const EdgeInsets.only(top: 10),

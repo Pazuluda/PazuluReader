@@ -529,6 +529,8 @@ class Settings {
     this.reduceMotion = false,
     this.performanceMode = 'auto',
     this.marathonMode = false,
+    this.startWithWindows = false,
+    this.followSystemTheme = false,
     this.readerDim = 0,
     this.readerWarm = 0,
     Map<String, List<int>>? pageTrims,
@@ -573,6 +575,12 @@ class Settings {
 
   /// Lecture verticale : le chapitre suivant s'ouvre tout seul à la fin.
   bool marathonMode;
+
+  /// Lancer Pazulu (réduit) à l'ouverture de session Windows.
+  bool startWithWindows;
+
+  /// Mode clair / sombre identique à celui de Windows.
+  bool followSystemTheme;
 
   /// Filtre du lecteur : assombrissement (0–0.7) et lumière chaude (0–1).
   double readerDim;
@@ -635,6 +643,8 @@ class Settings {
         'reduceMotion': reduceMotion,
         'performanceMode': performanceMode,
         'marathonMode': marathonMode,
+        'startWithWindows': startWithWindows,
+        'followSystemTheme': followSystemTheme,
         'readerDim': readerDim,
         'readerWarm': readerWarm,
         'pageTrims': pageTrims,
@@ -668,6 +678,8 @@ class Settings {
           ? json['performanceMode'] as String
           : 'auto',
       marathonMode: (json['marathonMode'] as bool?) ?? false,
+      startWithWindows: (json['startWithWindows'] as bool?) ?? false,
+      followSystemTheme: (json['followSystemTheme'] as bool?) ?? false,
       readerDim: ((json['readerDim'] as num?) ?? 0).toDouble().clamp(0.0, 0.7),
       readerWarm: ((json['readerWarm'] as num?) ?? 0).toDouble().clamp(0.0, 1.0),
       pageTrims: {

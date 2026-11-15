@@ -430,6 +430,7 @@ class _KiosqueHeader extends StatelessWidget {
             ),
           ),
           const _BackgroundActivity(),
+          const _OfflineBadge(),
           _HeaderButton(
             tooltip: update != null
                 ? 'Mise à jour disponible : v$update'
@@ -528,8 +529,41 @@ class _HeaderTabState extends State<_HeaderTab> {
   }
 }
 
-/// Small spinner while the start-up updates run in background (catalogues,
-/// chapters, statuses); the detail is in its tooltip. Rebuilds alone.
+/// Hors ligne : pastille dans l'en-tête (seuls les chapitres téléchargés
+/// sont lisibles). Se reconstruit seule.
+class _OfflineBadge extends StatelessWidget {
+  const _OfflineBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    final app = AppScope.read(context);
+    return ValueListenableBuilder<bool>(
+      valueListenable: app.online,
+      builder: (context, online, _) => online
+          ? const SizedBox.shrink()
+          : Tooltip(
+              message: 'Pas de connexion internet : seuls les chapitres téléchargés sont lisibles. '
+                  'Clic pour revérifier.',
+              child: InkWell(
+                onTap: () => app.checkOnline(),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: p.warning, border: Border.all(color: p.ink, width: 1.5)),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.cloud_off_rounded, size: 16, color: Colors.black),
+                    SizedBox(width: 6),
+                    Text('HORS LIGNE', style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w800)),
+                  ]),
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+/// Spinner of the background updates; the detail is in its tooltip.
 class _BackgroundActivity extends StatelessWidget {
   const _BackgroundActivity();
 

@@ -26,6 +26,9 @@ class _SourcesPageState extends State<SourcesPage> {
   final _query = TextEditingController();
   bool _showDisabled = false;
 
+  /// Seulement les sites en difficulté (accès limité, incident, panne).
+  bool _troubleOnly = false;
+
   @override
   void dispose() {
     _query.dispose();
@@ -404,8 +407,28 @@ class _SourcesPageState extends State<SourcesPage> {
       if (query.isNotEmpty &&
           !site.title.toLowerCase().contains(query) &&
           !site.home.toLowerCase().contains(query)) return false;
+      if (_troubleOnly) {
+        final h = app.healthFor(site.id)?.status;
+        if (h == null || h == SourceHealthStatus.unknown || h == SourceHealthStatus.reachable) return false;
+      }
       return true;
     }).toList();
+    // État des sites : un résumé d'un coup d'œil.
+    var ok = 0, limited = 0, unstable = 0, offline = 0, unknown = 0;
+    for (final site in all) {
+      switch (app.healthFor(site.id)?.status) {
+        case SourceHealthStatus.reachable:
+          ok++;
+        case SourceHealthStatus.blocked:
+          limited++;
+        case SourceHealthStatus.unstable:
+          unstable++;
+        case SourceHealthStatus.suspectedOffline:
+          offline++;
+        default:
+          unknown++;
+      }
+    }
 
     return Scaffold(
       backgroundColor: p.background,
@@ -428,6 +451,19 @@ class _SourcesPageState extends State<SourcesPage> {
                     'valides. Aucun chapitre n’est telecharge pendant la recherche.',
                     style: TextStyle(color: p.muted, fontSize: 13),
                   ),
+                  const SizedBox(height: PazuluSpace.sm),
+                  Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Tag('$ok accessibles', icon: Icons.check_circle_outline_rounded, color: p.success),
+                    Tag('$limited accès limité', icon: Icons.shield_outlined, color: p.warning),
+                    Tag('$unstable incident', icon: Icons.warning_amber_rounded, color: p.warning),
+                    Tag('$offline en panne', icon: Icons.cloud_off_outlined, color: p.danger),
+                    Tag('$unknown non vérifiés', icon: Icons.help_outline_rounded),
+                    FilterChip(
+                      label: const Text('Seulement les sites en difficulté'),
+                      selected: _troubleOnly,
+                      onSelected: (v) => setState(() => _troubleOnly = v),
+                    ),
+                  ]),
                   const SizedBox(height: PazuluSpace.md),
                   TextField(
                     controller: _query,

@@ -6,6 +6,7 @@ import 'app_scope.dart';
 import 'settings_page.dart';
 import 'widgets/common.dart';
 import 'work_page.dart';
+import 'year_recap_page.dart';
 
 IconData achievementIcon(String key) => switch (key) {
       'book' => Icons.menu_book_rounded,
@@ -108,6 +109,37 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text('Chapitre lu : 10 XP · épisode vu : 30 XP · série terminée : 150 XP · favori : 5 XP',
                     style: TextStyle(color: p.muted, fontSize: 12)),
+                const SectionHeader('Défis du mois', padding: EdgeInsets.fromLTRB(0, 20, 0, 8)),
+                Glass(
+                  child: Column(children: [
+                    for (final c in app.monthlyChallenges)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(children: [
+                          Icon(c.done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                              size: 18, color: c.done ? p.success : p.muted),
+                          const SizedBox(width: 10),
+                          Expanded(flex: 3, child: Text(c.title)),
+                          Expanded(
+                            flex: 2,
+                            child: LinearProgressIndicator(value: c.ratio, minHeight: 6,
+                                backgroundColor: p.surfaceHigh, color: c.done ? p.success : p.bright),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(width: 64, child: Text('${c.value > c.goal ? c.goal : c.value} / ${c.goal}',
+                              textAlign: TextAlign.right, style: TextStyle(color: p.muted))),
+                        ]),
+                      ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => pushPage(context, const YearRecapPage()),
+                        icon: const Icon(Icons.auto_awesome_rounded),
+                        label: Text('Mon année ${DateTime.now().year}'),
+                      ),
+                    ),
+                  ]),
+                ),
                 const SectionHeader('Depuis le début', padding: EdgeInsets.fromLTRB(0, 20, 0, 8)),
                 Row(children: [
                   stat('${s.chapters}', 'chapitres lus', Icons.menu_book_rounded),

@@ -115,9 +115,16 @@ class SettingsPage extends StatelessWidget {
                         ButtonSegment(value: true, icon: Icon(Icons.dark_mode_outlined, size: 18), label: Text('SOMBRE')),
                       ],
                       selected: {s.darkMode},
-                      onSelectionChanged: (v) => app.setAppearance(dark: v.first),
+                      onSelectionChanged: s.followSystemTheme ? null : (v) => app.setAppearance(dark: v.first),
                     ),
                   ]),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Suivre le thème de Windows'),
+                    subtitle: const Text('Clair ou sombre comme Windows, même s\'il change pendant que Pazulu est ouvert.'),
+                    value: s.followSystemTheme,
+                    onChanged: (v) => app.updateSettings((st) => st.followSystemTheme = v),
+                  ),
                   const SizedBox(height: PazuluSpace.lg),
                   Text('Couleur d\'accent : boutons, étiquettes, barres de progression',
                       style: TextStyle(color: p.muted, fontSize: 13)),
@@ -428,6 +435,47 @@ class SettingsPage extends StatelessWidget {
                         onPressed: () => Clipboard.setData(ClipboardData(text: app.dataPath!)),
                       ),
                     ),
+                ]),
+                section('Windows', [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Démarrer avec Windows'),
+                    subtitle: const Text('Pazulu s\'ouvre réduit dans la barre des tâches à l\'ouverture de session. '
+                        'Désactivé par défaut (une app de plus au démarrage peut gêner certains jeux).'),
+                    value: s.startWithWindows,
+                    onChanged: (v) async {
+                      final ok = await app.setStartWithWindows(v);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Réglage de Windows non modifié (voir le journal).')));
+                      }
+                    },
+                  ),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.visibility_off_outlined),
+                    title: Text('Touche « boss » : Ctrl + Maj + H'),
+                    subtitle: Text('Réduit Pazulu instantanément quand il est au premier plan.'),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.bug_report_outlined, color: p.bright),
+                    title: const Text('Créer un rapport de bug'),
+                    subtitle: const Text('Un .zip dans Téléchargements : journal, version, machine, réglages. '
+                        'Ni bibliothèque, ni historique, ni données personnelles.'),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        final path = await app.createBugReport();
+                        messenger.showSnackBar(SnackBar(content: Text('Rapport créé : $path')));
+                        if (Platform.isWindows) {
+                          await Process.start('explorer.exe', ['/select,', path], mode: ProcessStartMode.detached);
+                        }
+                      } catch (e) {
+                        messenger.showSnackBar(SnackBar(content: Text('Rapport impossible : $e')));
+                      }
+                    },
+                  ),
                 ]),
                 section('À propos', [
                   const Text('Pazulu Reader $appVersion'),
