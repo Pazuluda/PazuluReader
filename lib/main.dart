@@ -12,6 +12,7 @@ import 'design/theme.dart';
 import 'ui/app_scope.dart';
 import 'ui/shell.dart';
 import 'ui/splash/splash_screen.dart';
+import 'ui/widgets/common.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,6 +77,8 @@ Future<void> main() async {
     state.touch();
     return false;
   });
+  // A cover that does not load: looked for on AniList / MangaDex.
+  CoverImage.onBroken = state.coverFailed;
   runApp(PazuluApp(state: state));
   if (!DeviceProfile.light) {
     Timer(const Duration(seconds: 2), () {
