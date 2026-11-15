@@ -402,7 +402,7 @@ class _WorkPageState extends State<WorkPage> {
         st.weeksToCatchUp! < 1
             ? 'rattrapé en quelques jours à ce rythme'
             : 'rattrapé dans ≈ ${st.weeksToCatchUp!.ceil()} semaine(s) à ce rythme',
-      ?next,
+      if (next != null) next,
     ];
     return Padding(
       padding: const EdgeInsets.only(top: 10),
