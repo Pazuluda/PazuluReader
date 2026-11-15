@@ -167,9 +167,9 @@ class _AnchorMark extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.keyboard_arrow_up_rounded, size: 14, color: tone(direction < 0)),
+          Icon(Icons.keyboard_arrow_up_rounded, size: 12, color: tone(direction < 0)),
           Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
-          Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: tone(direction > 0)),
+          Icon(Icons.keyboard_arrow_down_rounded, size: 12, color: tone(direction > 0)),
         ],
       ),
     );

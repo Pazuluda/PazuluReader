@@ -40,16 +40,14 @@ void main() {
     }
     expect(controller.offset, greaterThan(100));
 
-    final click = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await click.addPointer(location: const Offset(200, 320));
-    await click.down(const Offset(200, 320));
-    await click.up();
+    // Un nouveau clic (même souris) arrête.
+    await mouse.down(const Offset(200, 320));
+    await mouse.up();
     await tester.pump();
     expect(key.currentState!.active, isFalse);
     final stoppedAt = controller.offset;
     await tester.pump(const Duration(milliseconds: 200));
     expect(controller.offset, stoppedAt);
     await mouse.removePointer();
-    await click.removePointer();
   });
 }
