@@ -51,10 +51,10 @@ class _PausedScopeState extends State<PausedScope> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final s = AppScope.read(context);
+    final s = context.getInheritedWidgetOfExactType<AppScope>()?.state;
     if (!identical(s, _state)) {
       _state?.removeListener(_onChange);
-      _state = s..addListener(_onChange);
+      _state = s?..addListener(_onChange);
     }
   }
 
@@ -76,8 +76,11 @@ class _PausedScopeState extends State<PausedScope> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      AppScope(state: _state!, notifier: _relay, child: widget.child);
+  Widget build(BuildContext context) {
+    final s = _state;
+    // No app data above (isolated widget): nothing to pause.
+    return s == null ? widget.child : AppScope(state: s, notifier: _relay, child: widget.child);
+  }
 }
 
 class _Relay extends ChangeNotifier {
