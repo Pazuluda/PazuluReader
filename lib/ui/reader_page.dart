@@ -1755,14 +1755,19 @@ class _ReaderPageState extends State<ReaderPage> {
   }
 
   /// Soirée : assombrissement et lumière chaude sur les pages seulement
-  /// (les barres restent normales).
+  /// (les barres restent normales). Deux simples calques transparents
+  /// par-dessus : aucun effet de couleur coûteux à chaque image, le
+  /// défilement reste fluide même sur une petite carte graphique.
   Widget _filtered(Widget child) {
     final dim = _app.settings.readerDim, warm = _app.settings.readerWarm;
     if (dim <= 0 && warm <= 0) return child;
-    final k = 1 - dim;
-    final color = Color.fromARGB(255, (255 * k).round(), (255 * (1 - 0.15 * warm) * k).round(),
-        (255 * (1 - 0.40 * warm) * k).round());
-    return ColorFiltered(colorFilter: ColorFilter.mode(color, BlendMode.modulate), child: child);
+    return Stack(fit: StackFit.expand, children: [
+      child,
+      if (warm > 0)
+        IgnorePointer(child: ColoredBox(color: Color.fromRGBO(255, 140, 40, 0.16 * warm))),
+      if (dim > 0)
+        IgnorePointer(child: ColoredBox(color: Color.fromRGBO(0, 0, 0, dim))),
+    ]);
   }
 
   Widget _body() {
