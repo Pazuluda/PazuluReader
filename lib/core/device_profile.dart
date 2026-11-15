@@ -35,7 +35,7 @@ class DeviceProfile {
 
   /// Shortest gap between two refreshes of the screens by background work.
   static Duration get notifyGap =>
-      light ? const Duration(milliseconds: 500) : const Duration(milliseconds: 200);
+      light ? const Duration(milliseconds: 1000) : const Duration(milliseconds: 400);
 
   static bool? _background;
 

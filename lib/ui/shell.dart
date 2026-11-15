@@ -287,6 +287,8 @@ class _LazyTabBodyState extends State<LazyTabBody> {
   @override
   Widget build(BuildContext context) {
     assert(widget.activeIndex >= 0 && widget.activeIndex < widget.pages.length);
+    // The main screen is hidden while a work, the reader… is open on top.
+    final onTop = ModalRoute.of(context)?.isCurrent ?? true;
     return IndexedStack(
       index: widget.activeIndex,
       children: [
@@ -294,11 +296,16 @@ class _LazyTabBodyState extends State<LazyTabBody> {
           if (!_visited.contains(i))
             const SizedBox.shrink()
           else
-            TickerMode(
-              enabled: i == widget.activeIndex,
-              child: _TabEntrance(
-                active: i == widget.activeIndex,
-                child: widget.pages[i],
+            // Hidden tabs are not rebuilt at every change of the data
+            // (hundreds of works, background refresh): only the visible one.
+            PausedScope(
+              active: onTop && i == widget.activeIndex,
+              child: TickerMode(
+                enabled: i == widget.activeIndex,
+                child: _TabEntrance(
+                  active: i == widget.activeIndex,
+                  child: widget.pages[i],
+                ),
               ),
             ),
       ],

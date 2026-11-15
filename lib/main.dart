@@ -102,6 +102,8 @@ class _PazuluAppState extends State<PazuluApp> {
   @override
   void initState() {
     super.initState();
+    _appearance.value = _lookOf(widget.state);
+    widget.state.addListener(_onState);
     // Enregistre la bibliothèque dès que l'app passe en arrière-plan ou se ferme.
     _lifecycle = AppLifecycleListener(
       onPause: () {
@@ -125,8 +127,17 @@ class _PazuluAppState extends State<PazuluApp> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    widget.state.removeListener(_onState);
+    _appearance.dispose();
     super.dispose();
   }
+
+  final _appearance = ValueNotifier<String>('');
+
+  String _lookOf(AppState s) =>
+      '${s.settings.themeId}|${s.settings.darkMode}|${s.settings.reduceMotion}|${DeviceProfile.light}';
+
+  void _onState() => _appearance.value = _lookOf(widget.state);
 
   /// Le thème n'est reconstruit que lorsque la palette change.
   ThemeData _themeFor(String id, bool dark) {
@@ -143,8 +154,10 @@ class _PazuluAppState extends State<PazuluApp> {
     final state = widget.state;
     return AppScope(
       state: state,
+      // Rebuilt only when the look changes (theme, dark mode, animations),
+      // not at every change of the library.
       child: ListenableBuilder(
-        listenable: state,
+        listenable: _appearance,
         builder: (context, _) {
           final theme = _themeFor(state.settings.themeId, state.settings.darkMode);
           return MaterialApp(

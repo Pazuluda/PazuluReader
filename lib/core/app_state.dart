@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.3.0';
+const String appVersion = '1.3.1';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -712,10 +712,19 @@ class AppState extends ChangeNotifier {
     return updatedSite.toCatalogSite();
   }
 
+  DateTime _lastSave = DateTime(2000);
+
+  /// Saves 1 s after the last change, and at least every 8 s while changes
+  /// keep coming (background refresh): no endless re-writing of a big
+  /// library, nothing lost either.
   void _changed() {
     notifyListeners();
     _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 600), _saveNow);
+    final overdue = DateTime.now().difference(_lastSave) > const Duration(seconds: 8);
+    _saveTimer = Timer(overdue ? const Duration(milliseconds: 200) : const Duration(seconds: 1), () {
+      _lastSave = DateTime.now();
+      unawaited(_saveNow());
+    });
   }
 
   Future<void> _saveNow() async {
