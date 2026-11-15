@@ -1324,6 +1324,8 @@ class AppState extends ChangeNotifier {
   /// otherwise nothing (instant start). The rest refreshes in background.
   Future<void> warmUp({void Function(String step)? onStep}) async {
     if (!ready) return;
+    // New versions are looked for at once, not after the warm-up.
+    _scheduleUpdateChecks();
     await _indexLoading;
     // No catalogue indexed yet = first full loading (up to ~5 min).
     final upgraded = _warmupVersion != appVersion;
@@ -1390,7 +1392,6 @@ class AppState extends ChangeNotifier {
     // What did not fit continues in background, the app is usable.
     Timer(const Duration(seconds: 20), () => unawaited(crawlSiteIndex()));
     Timer(const Duration(minutes: 2), () => unawaited(refreshSeriesStatuses()));
-    _scheduleUpdateChecks();
     AppLog.info('Démarrage : ${works.length} œuvres, '
         '${DateTime.now().difference(start).inSeconds} s (${first ? 'premier chargement complet' : 'mise à jour'}).');
   }
@@ -2753,6 +2754,17 @@ class AppState extends ChangeNotifier {
       checkingUpdate = false;
       notifyListeners();
     }
+  }
+
+  /// The « Mise à jour » button: one press is enough. Looks on GitHub if
+  /// needed, then downloads and installs the newer version at once
+  /// (Pazulu restarts by itself). Nothing happens when already up to date.
+  Future<void> updateNow() async {
+    if (updateProgress != null) return;
+    if (availableUpdate == null) {
+      await checkForAppUpdate();
+    }
+    if (availableUpdate != null) await installAppUpdate();
   }
 
   /// Downloads the new version, saves everything, starts the installer and
