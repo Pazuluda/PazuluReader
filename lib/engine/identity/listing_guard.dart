@@ -127,6 +127,42 @@ class ListingGuard {
     return ints.length >= (ints.last - ints.first + 1) * 0.85;
   }
 
+  /// A list going far beyond EVERY other site of its language is another
+  /// work with the same name, even when it is complete and gap-free: on one
+  /// site « Solo Leveling: Ragnarok » was a fan series of 201 chapters while
+  /// every other site stopped around 73. At least 2 other sites of that
+  /// language (10 numbered chapters or more each) are needed to judge, and
+  /// one single other site at the same level is enough to keep the list
+  /// (no site is a reference, the most advanced one is the measure).
+  static String? farBeyondAllPeers(List<SourceChapter> candidate, Iterable<List<SourceChapter>> others) {
+    final byLang = <String, List<double>>{};
+    for (final c in candidate) {
+      final n = c.key.number;
+      if (!c.isExternal && n != null && n >= 1) byLang.putIfAbsent(c.lang, () => []).add(n);
+    }
+    for (final e in byLang.entries) {
+      final lang = e.key;
+      final mine = e.value..sort();
+      final peerMax = <double>[];
+      for (final list in others) {
+        final nums = <double>{
+          for (final c in list)
+            if (c.lang == lang && !c.isExternal && c.key.number != null && c.key.number! >= 1) c.key.number!,
+        };
+        if (nums.length >= 10) peerMax.add(nums.reduce((a, b) => a > b ? a : b));
+      }
+      if (peerMax.length < 2) continue;
+      final best = peerMax.reduce((a, b) => a > b ? a : b);
+      final limit = best * 1.3 + 15;
+      final beyond = mine.where((n) => n > limit).length;
+      if (mine.last > limit && beyond >= 10) {
+        return 'chapitre ${_fmt(mine.last)} ($lang) alors que les ${peerMax.length} autres sites '
+            's\'arrêtent au plus au ${_fmt(best)} : autre œuvre du même nom';
+      }
+    }
+    return null;
+  }
+
   /// Why [candidate] (a web site's chapters) cannot be the same work as the
   /// trusted [reference] chapters (API connectors, local copies), or null.
   static String? rejectReason(List<SourceChapter> candidate, List<SourceChapter> reference,
