@@ -494,6 +494,29 @@ class AniListClient {
     ];
   }
 
+  /// Œuvres recommandées par les lecteurs d'AniList pour [search] (la
+  /// meilleure correspondance), mieux notées d'abord.
+  Future<List<WorkInfo>> recommendations(String search, {int perPage = 12}) async {
+    final data = await _query(
+        r'query ($s: String, $n: Int) { Media(search: $s, type: MANGA, format_not: NOVEL) { id '
+        r'recommendations(sort: RATING_DESC, perPage: $n) { nodes { mediaRecommendation { '
+        'id title { romaji english native } synonyms coverImage { extraLarge large } status(version: 2) '
+        'chapters volumes format countryOfOrigin averageScore popularity genres startDate { year } '
+        'description(asHtml: false) isAdult staff(perPage: 2, sort: RELEVANCE) { nodes { name { full } } } '
+        '} } } } }',
+        {'s': search, 'n': perPage});
+    final media = data['Media'];
+    final recs = media is Map ? media['recommendations'] : null;
+    final nodes = recs is Map ? recs['nodes'] : null;
+    return [
+      for (final n in (nodes is List ? nodes : const []))
+        if (n is Map && n['mediaRecommendation'] is Map &&
+            (n['mediaRecommendation'] as Map)['isAdult'] != true &&
+            (n['mediaRecommendation'] as Map)['format'] != 'NOVEL')
+          if (comicFromJson(n['mediaRecommendation']) case final WorkInfo w) w,
+    ];
+  }
+
   static WorkInfo? comicFromJson(Object? m) {
     if (m is! Map || m['id'] is! int) return null;
     final t = m['title'] is Map ? m['title'] as Map : const {};
