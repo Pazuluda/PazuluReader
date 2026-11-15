@@ -33,7 +33,7 @@ class MomentsPage extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(PazuluSpace.lg),
               itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: PazuluSpace.sm),
+              separatorBuilder: (_, _i) => const SizedBox(height: PazuluSpace.sm),
               itemBuilder: (context, i) => _MomentTile(moment: list[i]),
             ),
     );
