@@ -5,6 +5,7 @@ import '../core/models.dart';
 import '../design/theme.dart';
 import 'app_scope.dart';
 import 'widgets/common.dart';
+import 'widgets/library_hints.dart';
 import 'widgets/entry_actions.dart';
 import 'widgets/motion.dart';
 import 'work_page.dart';
@@ -328,6 +329,11 @@ class _LibraryPageState extends State<LibraryPage> {
                   style: TextStyle(color: p.muted, fontSize: 12)),
             ]),
           ),
+        ),
+        // Doublons, séries terminées à finir, lectures à mettre en pause.
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          sliver: SliverToBoxAdapter(child: LibraryHints()),
         ),
         if (list.isEmpty)
           SliverToBoxAdapter(

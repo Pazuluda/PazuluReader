@@ -351,6 +351,38 @@ class _WorkPageState extends State<WorkPage> {
     }
   }
 
+  /// « Mes stats » de l'œuvre : chapitres lus, début / dernière lecture,
+  /// rythme récent et temps pour rattraper.
+  Widget _myStats(BuildContext context) {
+    final app = AppScope.read(context);
+    final e = app.entry(widget.work.id);
+    if (e == null || (e.progress.readKeys.isEmpty && e.progress.lastKey == null)) {
+      return const SizedBox.shrink();
+    }
+    final st = app.statsFor(e);
+    final p = context.pal;
+    String date(DateTime? d) => d == null ? '—' : '${d.day}/${d.month}/${d.year}';
+    final parts = <String>[
+      '${st.readCount} chapitre(s) lu(s)',
+      'commencé le ${date(st.firstAt)}',
+      'dernière lecture le ${date(st.lastAt)}',
+      if (st.perWeek != null) 'rythme : ${st.perWeek!.toStringAsFixed(st.perWeek! < 10 ? 1 : 0)} ch./semaine',
+      if (st.remaining != null && st.remaining! > 0) '${st.remaining} à lire',
+      if (st.weeksToCatchUp != null)
+        st.weeksToCatchUp! < 1
+            ? 'rattrapé en quelques jours à ce rythme'
+            : 'rattrapé dans ≈ ${st.weeksToCatchUp!.ceil()} semaine(s) à ce rythme',
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(children: [
+        Icon(Icons.insights_rounded, size: 16, color: p.bright),
+        const SizedBox(width: 8),
+        Expanded(child: Text(parts.join('  ·  '), style: TextStyle(color: p.muted, fontSize: 12.5))),
+      ]),
+    );
+  }
+
   Future<void> _markUpTo(List<ChapterGroup> groups) async {
     final raw = await _askChapter('Marquer comme lus jusqu\'au chapitre…', 'Marquer');
     if (raw == null || !mounted) return;
@@ -670,6 +702,7 @@ class _WorkPageState extends State<WorkPage> {
           FadeSlideIn(index: 0, child: hero),
           const SizedBox(height: 20),
           _availabilityPanel(context, groups),
+          _myStats(context),
           if (w.tags.isNotEmpty) ...[
             const SizedBox(height: 8),
             TextButton.icon(
