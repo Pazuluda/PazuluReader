@@ -29,6 +29,8 @@ import 'bookmarks_import.dart';
 import 'coverage.dart';
 import 'device_profile.dart';
 import 'host_gate.dart';
+import 'recap.dart';
+import 'zip_writer.dart';
 import 'library_insights.dart';
 import 'moments.dart';
 import 'language_consensus.dart';
@@ -65,7 +67,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.8.0';
+const String appVersion = '1.9.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -1382,6 +1384,7 @@ class AppState extends ChangeNotifier {
     if (!ready) return;
     // New versions are looked for at once, not after the warm-up.
     await _checkFailedInstall();
+    _startOnlineWatch();
     _scheduleUpdateChecks();
     await _indexLoading;
     // No catalogue indexed yet = first full loading (up to ~5 min).
@@ -3020,6 +3023,97 @@ class AppState extends ChangeNotifier {
     return _availableCache[key] = ok;
   }
 
+  // ---- Défis, récap, connexion, rapport de bug, Windows ----
+
+  List<MonthlyChallenge> get monthlyChallenges =>
+      Recap.challenges(entries, _data.activity, history);
+
+  YearRecap yearRecap(int year) => Recap.year(entries, _data.activity, history, year: year);
+
+  /// false quand internet ne répond pas (vérifié au démarrage puis toutes
+  /// les minutes, seulement quand Pazulu est au premier plan).
+  final ValueNotifier<bool> online = ValueNotifier(true);
+  Timer? _onlineTimer;
+
+  void _startOnlineWatch() {
+    _onlineTimer?.cancel();
+    unawaited(checkOnline());
+    _onlineTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (_active) unawaited(checkOnline());
+    });
+  }
+
+  Future<bool> checkOnline() async {
+    var ok = false;
+    for (final host in const ['github.com', 'graphql.anilist.co']) {
+      try {
+        final r = await InternetAddress.lookup(host).timeout(const Duration(seconds: 4));
+        if (r.isNotEmpty) {
+          ok = true;
+          break;
+        }
+      } catch (_) {}
+    }
+    if (online.value != ok) {
+      online.value = ok;
+      AppLog.info(ok ? 'Connexion retrouvée' : 'Hors ligne : seuls les chapitres téléchargés sont lisibles');
+    }
+    return ok;
+  }
+
+  /// Rapport de bug : un .zip dans Téléchargements avec le journal, la
+  /// version, la machine et les réglages (sans la bibliothèque, sans
+  /// historique ni données personnelles). Renvoie son chemin.
+  Future<String> createBugReport() async {
+    await AppLog.flush();
+    final zip = ZipWriter();
+    final logPath = AppLog.path;
+    if (logPath != null) {
+      final f = File(logPath);
+      if (await f.exists()) zip.addBytes('pazulu.log', await f.readAsBytes());
+    }
+    zip.addText('infos.txt', [
+      'Pazulu Reader $appVersion',
+      'Date : ${DateTime.now().toIso8601String()}',
+      'Système : ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+      'Processeurs : ${Platform.numberOfProcessors} · mode ${DeviceProfile.mode} '
+          '(${DeviceProfile.light ? 'léger' : 'complet'})',
+      'Bibliothèque : ${entries.length} œuvres · ${history.length} passages d\'historique',
+      'Index des sites : ${siteIndex.siteCount} sites · ${siteIndex.titleCount} titres',
+      'Connexion : ${online.value ? 'en ligne' : 'hors ligne'}',
+    ].join('\r\n'));
+    final settingsJson = Map<String, dynamic>.from(settings.toJson())
+      ..remove('blockedSources');
+    zip.addText('reglages.json', const JsonEncoder.withIndent('  ').convert(settingsJson));
+    final home = Platform.environment['USERPROFILE'] ?? Directory.systemTemp.path;
+    var dir = Directory('$home${Platform.pathSeparator}Downloads');
+    if (!await dir.exists()) dir = Directory.systemTemp;
+    final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 12);
+    final out = File('${dir.path}${Platform.pathSeparator}pazulu-rapport-$stamp.zip');
+    await out.writeAsBytes(zip.build(), flush: true);
+    AppLog.info('Rapport de bug créé : ${out.path}');
+    return out.path;
+  }
+
+  /// Démarrage avec Windows (clé « Run » de l'utilisateur, jamais pour
+  /// toute la machine) : Pazulu s'ouvre réduit.
+  Future<bool> setStartWithWindows(bool on) async {
+    if (!Platform.isWindows) return false;
+    const key = r'HKCU\Software\Microsoft\Windows\CurrentVersion\Run';
+    try {
+      final r = on
+          ? await Process.run('reg', ['add', key, '/v', 'Pazulu Reader', '/t', 'REG_SZ',
+              '/d', '"${Platform.resolvedExecutable}" --minimized', '/f'])
+          : await Process.run('reg', ['delete', key, '/v', 'Pazulu Reader', '/f']);
+      final ok = r.exitCode == 0 || (!on && r.exitCode == 1);
+      if (ok) updateSettings((s) => s.startWithWindows = on);
+      return ok;
+    } catch (e) {
+      AppLog.info('Démarrage avec Windows non modifié : $e');
+      return false;
+    }
+  }
+
   // ---- Mes moments (pages marquées dans le lecteur) ----
 
   final List<Moment> moments = [];
@@ -4342,6 +4436,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _onlineTimer?.cancel();
     _brokenTimer?.cancel();
     _trailingNotify?.cancel();
     _quietNotify?.cancel();
