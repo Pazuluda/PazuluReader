@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.3.1';
+const String appVersion = '1.3.2';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -1109,6 +1109,7 @@ class AppState extends ChangeNotifier {
           }
         }
       }
+      lastCheckAt = DateTime.tryParse('${raw['lastCheckAt']}');
       final metaTried = raw['metaTried'];
       if (metaTried is Map) {
         for (final e in metaTried.entries) {
@@ -1287,7 +1288,7 @@ class AppState extends ChangeNotifier {
   Future<void> crawlSiteIndex({
     void Function(String step)? onStep,
     DateTime? deadline,
-    Duration maxAge = const Duration(hours: 24),
+    Duration maxAge = const Duration(days: 3),
   }) async {
     if (_crawling) return;
     _crawling = true;
@@ -1297,7 +1298,9 @@ class AppState extends ChangeNotifier {
       final todo = webConnectors().where((s) {
         if (siteIndex.isFresh(s.id, maxAge: maxAge)) return false;
         final failed = siteIndex.failedAt[s.id];
-        return failed == null || now.difference(failed) > const Duration(hours: 6);
+        // A site that could not be read (dead, anti-robot…) is retried
+        // after 2 days, not at every start.
+        return failed == null || now.difference(failed) > const Duration(days: 2);
       }).toList()
         // Never indexed first, then the oldest.
         ..sort((a, b) => (siteIndex.crawledAt[a.id] ?? DateTime(2000))
@@ -1382,7 +1385,10 @@ class AppState extends ChangeNotifier {
     if (upgraded) siteIndex.failedAt.clear();
     // Full loading only the very first time; a new version of Pazulu keeps
     // what is already known (chapter lists on disk, sites found).
-    final first = _warmupAt == null || siteIndex.siteCount == 0;
+    // (Not « never finished »: closing Pazulu during the first loading must
+    // not make every later start a full loading again — what was read is
+    // already on disk.)
+    final first = siteIndex.siteCount == 0;
     final start = DateTime.now();
     final end = start.add(first
         ? const Duration(minutes: 5)
@@ -1402,6 +1408,7 @@ class AppState extends ChangeNotifier {
       // already on disk less than an hour old are kept as they are: later
       // starts only fetch what changed.
       final queue = <WorkInfo>[];
+      final entryOf = {for (final e in entries) e.work.id: e};
       for (final w in works) {
         final snap = _chapterCache[w.id] == null ? await _readChapterSnapshot(w.id) : null;
         if (snap != null) {
@@ -1410,19 +1417,34 @@ class AppState extends ChangeNotifier {
         }
         final age = _chapterCachedAt[w.id];
         // Lists on disk less than 6 h old are kept as they are (12 h on a
-        // modest PC): a restart only refreshes what may have changed.
-        final maxAge = DeviceProfile.light ? const Duration(hours: 12) : const Duration(hours: 6);
+        // modest PC): a restart only refreshes what may have changed. Works
+        // not being read (finished, paused, dropped, untouched for 2
+        // months): every 3 days only.
+        final e = entryOf[w.id];
+        final recentlyRead = e != null &&
+            DateTime.now().difference(e.progress.updatedAt ?? e.addedAt) < const Duration(days: 60);
+        final current = e == null ||
+            (e.status == TrackStatus.reading || e.status == TrackStatus.planned) && recentlyRead;
+        final maxAge = !current
+            ? const Duration(days: 3)
+            : (DeviceProfile.light ? const Duration(hours: 12) : const Duration(hours: 6));
         if (age == null || DateTime.now().difference(age) > maxAge) {
           queue.add(w);
         }
       }
       var done = 0;
-      final total = queue.length;
+      late final int total;
       // Works being read first (most recent progress), then the others.
       final recent = {
         for (final e in entries) e.work.id: e.progress.updatedAt ?? e.addedAt,
       };
       queue.sort((a, b) => (recent[a.id] ?? DateTime(2000)).compareTo(recent[b.id] ?? DateTime(2000)));
+      // At most 60 works per start (30 on a modest PC), the most recently
+      // read: a big library is refreshed over several starts instead of all
+      // at once; any work is refreshed anyway when its fiche is opened.
+      final cap = DeviceProfile.light ? 30 : 60;
+      if (queue.length > cap) queue.removeRange(0, queue.length - cap);
+      total = queue.length;
       onStep?.call('Chapitres de la bibliothèque · 0/$total');
       chapterGate.perLane = DeviceProfile.enginesPerLanguage;
       _chapterSourceTimeout = const Duration(seconds: 20);
@@ -1450,7 +1472,11 @@ class AppState extends ChangeNotifier {
           '(${DeviceProfile.enginesPerLanguage} moteurs FR + ${DeviceProfile.enginesPerLanguage} EN, '
           '${DeviceProfile.requestsPerSite} requêtes max par site).');
       // 3. New chapters (notifications) from the lists just loaded.
-      if (settings.checkOnStartup && entries.any((e) => e.watch) && DateTime.now().isBefore(end)) {
+      // Not again if done less than 3 h ago (the hourly check continues).
+      final recentCheck = lastCheckAt != null &&
+          DateTime.now().difference(lastCheckAt!) < const Duration(hours: 3);
+      if (settings.checkOnStartup && !recentCheck && entries.any((e) => e.watch) &&
+          DateTime.now().isBefore(end)) {
         onStep?.call('Recherche des nouveaux chapitres…');
         await checkUpdates().timeout(end.difference(DateTime.now()), onTimeout: () => 0);
       }
@@ -1495,6 +1521,7 @@ class AppState extends ChangeNotifier {
           if (_warmupVersion != null) 'warmupVersion': _warmupVersion,
           'statusVotes': _statusVotes,
           'firstSeen': _firstSeen,
+          if (lastCheckAt != null) 'lastCheckAt': lastCheckAt!.toIso8601String(),
           'metaTried': {
             for (final e in _metaTriedAt.entries) e.key: e.value.toIso8601String(),
           },
@@ -3245,13 +3272,16 @@ class AppState extends ChangeNotifier {
     try {
       for (final e in watched) {
         if (!_active) break;
+        await _breathe();
         for (final link in e.work.links) {
           final source = sources.byId(link.sourceId);
           if (source == null || isSourceBlocked(link.sourceId)) continue;
           try {
-            final latest = await source.latestChapters(
+            // Same traffic control as the chapter engines (2 requests max
+            // per site, French / English teams).
+            final latest = await chapterGate.run(source.id, () => source.latestChapters(
               link.workId, langs: languages, limit: 80,
-            );
+            ).timeout(const Duration(seconds: 30)), lane: _laneOf(source));
             final now = DateTime.now();
             final published = latest.where((c) => c.publishedAt == null ||
                 !c.publishedAt!.isAfter(now)).toList();
@@ -3425,6 +3455,7 @@ class AppState extends ChangeNotifier {
       _consecutiveFailures = nativeFailures > 0 ?
           (_consecutiveFailures + 1).clamp(0, 3).toInt() : 0;
       lastCheckAt = DateTime.now();
+      unawaited(_saveLocatedReaders());
       _changed();
       AppLog.info('Sorties : $found nouvelles, $verifiedFeeds flux verifies, '
           '$failedFeeds en echec, $confirmedUnread chapitres non lus.');
