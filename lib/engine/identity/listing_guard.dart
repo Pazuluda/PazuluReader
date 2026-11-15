@@ -199,11 +199,16 @@ class ListingGuard {
         final max = nums.reduce((a, b) => a > b ? a : b);
         final site = siteOf(e.key);
         final old = bySite[site];
-        bySite[site] = (
-          old == null || max > old.$1 ? max : old.$1,
-          old?.$2 == null || (newest != null && newest.isAfter(old!.$2!)) ? newest : old.$2,
-          {...?old?.$3, e.key},
-        );
+        if (old == null) {
+          bySite[site] = (max, newest, {e.key});
+        } else {
+          final oldDate = old.$2;
+          bySite[site] = (
+            max > old.$1 ? max : old.$1,
+            oldDate == null || (newest != null && newest.isAfter(oldDate)) ? newest : oldDate,
+            {...old.$3, e.key},
+          );
+        }
       }
       if (bySite.length < 4) continue;
       bool sameLevel(double a, double b) => (a - b).abs() <= (a > b ? a : b) * 0.15 + 5;
