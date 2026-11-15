@@ -38,13 +38,18 @@ class SettingsPage extends StatelessWidget {
             child: Glass(
               padding: const EdgeInsets.fromLTRB(PazuluSpace.lg, PazuluSpace.md, PazuluSpace.lg, PazuluSpace.md),
               radius: PazuluRadius.big,
-              child: Column(
+              // Own transparent Material: the click effects of the rows are
+              // drawn above the card's background (not hidden under it).
+              child: Material(
+                type: MaterialType.transparency,
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title.toUpperCase(), style: kiosqueDisplay(18, color: p.text)),
                   const SizedBox(height: PazuluSpace.sm),
                   ...children,
                 ],
+              ),
               ),
             ),
           ),

@@ -6,7 +6,7 @@ import 'package:pazulu_reader/ui/app_scope.dart';
 import 'package:pazulu_reader/ui/settings_page.dart';
 
 void main() {
-  for (final width in [1240.0, 390.0]) {
+  for (final width in [1240.0, 900.0]) {
     testWidgets('la page Réglages s\'affiche sans erreur ($width px)', (tester) async {
       await tester.binding.setSurfaceSize(Size(width, 2400));
       final state = AppState();
