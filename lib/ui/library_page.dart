@@ -156,6 +156,12 @@ class _LibraryPageState extends State<LibraryPage> {
     setState(() => _selection = null);
   }
 
+  int _derivedRev = -1;
+  int _derivedCount = -1;
+  Map<String, int> _unseenByWork = const {};
+  Map<String, DateTime> _releasedAt = const {};
+  Map<String, int> _unread = const {};
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
@@ -163,14 +169,25 @@ class _LibraryPageState extends State<LibraryPage> {
     final all = app.entries.toList();
     final f = _filters[_filter];
 
-    final unseenByWork = <String, int>{};
-    final releasedAt = <String, DateTime>{};
-    for (final u in app.updates) {
-      if (!u.seen) unseenByWork[u.workId] = (unseenByWork[u.workId] ?? 0) + 1;
-      final old = releasedAt[u.workId];
-      if (old == null || u.releasedAt.isAfter(old)) releasedAt[u.workId] = u.releasedAt;
+    // Counted once per change of the data, not again at every filter
+    // click, letter typed or selection.
+    if (_derivedRev != app.revision || _derivedCount != all.length) {
+      _derivedRev = app.revision;
+      _derivedCount = all.length;
+      final unseen = <String, int>{};
+      final released = <String, DateTime>{};
+      for (final u in app.updates) {
+        if (!u.seen) unseen[u.workId] = (unseen[u.workId] ?? 0) + 1;
+        final old = released[u.workId];
+        if (old == null || u.releasedAt.isAfter(old)) released[u.workId] = u.releasedAt;
+      }
+      _unseenByWork = unseen;
+      _releasedAt = released;
+      _unread = {for (final e in all) e.work.id: app.unreadCount(e)};
     }
-    final unread = {for (final e in all) e.work.id: app.unreadCount(e)};
+    final unseenByWork = _unseenByWork;
+    final releasedAt = _releasedAt;
+    final unread = _unread;
 
     final list = all.where((e) {
       if (!_matches(e, f)) return false;

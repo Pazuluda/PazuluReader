@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/device_profile.dart';
 import '../design/theme.dart';
 import '../core/log.dart';
 import 'app_scope.dart';
@@ -421,6 +422,7 @@ class _KiosqueHeader extends StatelessWidget {
               ),
             ),
           ),
+          const _BackgroundActivity(),
           _HeaderButton(
             tooltip: update != null
                 ? 'Mise à jour disponible : v$update'
@@ -519,6 +521,39 @@ class _HeaderTabState extends State<_HeaderTab> {
   }
 }
 
+/// Small spinner while the start-up updates run in background (catalogues,
+/// chapters, statuses); the detail is in its tooltip. Rebuilds alone.
+class _BackgroundActivity extends StatelessWidget {
+  const _BackgroundActivity();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    return ValueListenableBuilder<String?>(
+      valueListenable: AppScope.read(context).backgroundStep,
+      builder: (context, step, _) {
+        if (step == null) return const SizedBox.shrink();
+        return Tooltip(
+          message: 'Mise à jour en arrière-plan — $step',
+          child: SizedBox(
+            width: 44,
+            child: Center(
+              // Light mode: a still icon (no animation running for minutes).
+              child: DeviceProfile.light
+                  ? Icon(Icons.sync_rounded, size: 18, color: p.muted)
+                  : SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: p.muted),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _HeaderButton extends StatefulWidget {
   const _HeaderButton({
     required this.tooltip,
@@ -554,6 +589,7 @@ class _HeaderButtonState extends State<_HeaderButton> {
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: widget.onTap,
           child: Semantics(
             button: true,
