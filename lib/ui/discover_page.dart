@@ -37,7 +37,7 @@ enum _Mode { reads, anime }
 final ValueNotifier<String?> discoverSearchRequest = ValueNotifier<String?>(null);
 
 /// What Discover shows below the search (one at a time: readable).
-enum _Section { trending, popular, top, fresh, ongoing, hiatus, cancelled, completed, sites, titles }
+enum _Section { forYou, trending, popular, popularFr, top, fresh, ongoing, hiatus, cancelled, completed, sites, titles }
 
 class _SectionInfo {
   const _SectionInfo(this.label, this.subtitle, this.icon, this.colors, {this.sort, this.status});
@@ -51,10 +51,14 @@ class _SectionInfo {
 }
 
 const _sections = <_Section, _SectionInfo>{
+  _Section.forYou: _SectionInfo('Pour toi', 'D\'après ta bibliothèque', Icons.recommend_rounded,
+      [Color(0xFFEC4899), Color(0xFFF97316)], sort: 'FOR_YOU'),
   _Section.trending: _SectionInfo('Tendances', 'Ce qui se lit en ce moment', Icons.local_fire_department_rounded,
       [Color(0xFFF97316), Color(0xFFDB2777)], sort: 'TRENDING_DESC'),
   _Section.popular: _SectionInfo('Populaires', 'Les plus suivies', Icons.groups_rounded,
       [Color(0xFF6366F1), Color(0xFF8B5CF6)], sort: 'POPULARITY_DESC'),
+  _Section.popularFr: _SectionInfo('Populaires en FR', 'Dispo sur des sites FR', Icons.flag_circle_rounded,
+      [Color(0xFF2563EB), Color(0xFFDC2626)], sort: 'POPULARITY_FR'),
   _Section.top: _SectionInfo('Mieux notées', 'Les meilleures notes', Icons.star_rounded,
       [Color(0xFFEAB308), Color(0xFFF59E0B)], sort: 'SCORE_DESC'),
   _Section.fresh: _SectionInfo('Nouveautés', 'Séries récentes', Icons.fiber_new_rounded,
@@ -96,6 +100,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
     'POPULARITY_DESC': 'Populaires',
     'SCORE_DESC': 'Mieux notés',
     'START_DATE_DESC': 'Nouveautés',
+    'FOR_YOU': 'Pour toi',
+    'POPULARITY_FR': 'Populaires en FR',
   };
   static const _genres = [
     'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Mystery',
@@ -152,8 +158,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
       app.entries.any((e) => sameWorkAcrossSources(e.work,
           WorkInfo(id: w.id, title: w.title, altTitles: w.altTitles, type: w.type)));
 
-  List<WorkInfo> _visible(AppState app, List<WorkInfo> works) =>
-      _hideMine ? [for (final w in works) if (!_isMine(app, w)) w] : works;
+  bool _frOnly = false;
+  int _minChapters = 0;
+
+  List<WorkInfo> _visible(AppState app, List<WorkInfo> works) {
+    final fr = _frOnly || _sort == 'POPULARITY_FR';
+    return [
+      for (final w in works)
+        if ((!_hideMine || !_isMine(app, w)) &&
+            (!fr || app.availableIn(w, 'fr')) &&
+            (_minChapters == 0 || (int.tryParse(w.lastChapter ?? '') ?? 1 << 20) >= _minChapters))
+          w,
+    ];
+  }
 
   /// Pretty category tiles (one click = one section).
   Widget _sectionTiles() {
@@ -687,14 +704,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
     }
     setState(() { _catalogLoading = true; _catalogError = null; });
     try {
-      final page = await AppScope.read(context).anilist.comicCatalog(
-          sort: _sort, genre: _genre, country: _country, page: _catalogPage + 1);
+      final app = AppScope.read(context);
+      final forYou = _sort == 'FOR_YOU';
+      final page = forYou
+          ? (_catalogPage == 0 ? await app.recommendationsForYou() : const <WorkInfo>[])
+          : await app.anilist.comicCatalog(
+              sort: _sort == 'POPULARITY_FR' ? 'POPULARITY_DESC' : _sort,
+              genre: _genre, country: _country, page: _catalogPage + 1);
       if (!mounted || token != _catalogToken) return;
       setState(() {
         _catalogPage++;
         _catalog.addAll(page);
-        _catalogEnd = page.length < 40;
+        _catalogEnd = forYou || page.length < 40;
       });
+      // Filtered lists (FR only, chapters): a few more pages are fetched
+      // when too few works remain, up to 5 pages.
+      if (!_catalogEnd && _catalogPage < 5 && _visible(app, _catalog).length < 24) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && token == _catalogToken) _loadCatalog();
+        });
+      }
     } catch (e) {
       if (mounted && token == _catalogToken) setState(() => _catalogError = e);
     } finally {
@@ -761,7 +790,41 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   _loadCatalog(reset: true);
                 },
               ),
+              FilterChip(
+                avatar: const Icon(Icons.translate_rounded, size: 16),
+                label: const Text('Disponible en FR'),
+                selected: _frOnly || _sort == 'POPULARITY_FR',
+                onSelected: _sort == 'POPULARITY_FR' ? null : (v) => setState(() => _frOnly = v),
+              ),
+              DropdownButton<int>(
+                value: _minChapters,
+                items: const [
+                  DropdownMenuItem(value: 0, child: Text('Tous les chapitres')),
+                  DropdownMenuItem(value: 20, child: Text('20 ch. et +')),
+                  DropdownMenuItem(value: 50, child: Text('50 ch. et +')),
+                  DropdownMenuItem(value: 100, child: Text('100 ch. et +')),
+                  DropdownMenuItem(value: 200, child: Text('200 ch. et +')),
+                ],
+                onChanged: (v) => setState(() => _minChapters = v ?? 0),
+              ),
             ]),
+            if (_sort == 'FOR_YOU')
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  app.entries.isEmpty
+                      ? 'Ajoute des œuvres (favoris, notes) pour recevoir des recommandations.'
+                      : 'Conseillées par les lecteurs d\'AniList d\'après tes favoris, tes notes et '
+                          'tes œuvres les plus lues (« Comme … » sous chaque carte).',
+                  style: TextStyle(color: p.muted, fontSize: 12.5),
+                ),
+              ),
+            if (_minChapters > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text('Les séries dont le nombre de chapitres est inconnu (souvent en cours) restent affichées.',
+                    style: TextStyle(color: p.muted, fontSize: 12)),
+              ),
             const SizedBox(height: 10),
             SizedBox(
               height: 40,
@@ -801,7 +864,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
               return WorkCard(
                 work: w,
                 heroTag: 'cat-${w.id}',
-                subtitle: _catalogSubtitle(w),
+                subtitle: _sort == 'FOR_YOU' && app.becauseOf[w.id] != null
+                    ? 'Comme « ${app.becauseOf[w.id]} »'
+                    : _catalogSubtitle(w),
                 hoverInfo: workPreview(w, status: app.seriesStatus(w).status == SeriesStatus.unknown
                     ? w.publicationStatus : app.seriesStatus(w).status.label),
                 badge: app.entries.any((e) => sameWorkAcrossSources(e.work,

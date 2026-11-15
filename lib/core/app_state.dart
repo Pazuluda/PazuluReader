@@ -65,7 +65,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.7.0';
+const String appVersion = '1.8.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -2948,6 +2948,76 @@ class AppState extends ChangeNotifier {
     keep.updatedAt = DateTime.now();
     removeFromLibrary(drop.work.id);
     _changed();
+  }
+
+  // ---- Découverte : recommandations et disponibilité par langue ----
+
+  List<WorkInfo>? _forYou;
+  DateTime? _forYouAt;
+
+  /// Pour qui ? « Parce que tu as aimé X » : titre de l'œuvre de la
+  /// bibliothèque qui a amené chaque recommandation.
+  final Map<String, String> becauseOf = {};
+
+  /// Recommandations AniList à partir des œuvres préférées de la
+  /// bibliothèque (favoris, mieux notées, plus lues) : celles conseillées
+  /// par plusieurs d'entre elles d'abord ; déjà dans la bibliothèque
+  /// exclues. Gardées 6 h.
+  Future<List<WorkInfo>> recommendationsForYou({bool refresh = false}) async {
+    final cached = _forYou;
+    if (!refresh && cached != null && _forYouAt != null &&
+        DateTime.now().difference(_forYouAt!) < const Duration(hours: 6)) {
+      return cached;
+    }
+    int score(LibraryEntry e) =>
+        (e.favorite ? 1000 : 0) + (e.rating ?? 0) * 50 + e.progress.readKeys.length;
+    final seeds = [
+      for (final e in entries)
+        if (e.work.type != ContentType.anime && (e.favorite || e.rating != null || e.progress.readKeys.length >= 5)) e,
+    ]..sort((a, b) => score(b).compareTo(score(a)));
+    final votes = <String, (WorkInfo, int, int)>{}; // key → (work, votes, best rank)
+    becauseOf.clear();
+    for (final seed in seeds.take(6)) {
+      List<WorkInfo> recs;
+      try {
+        recs = await anilist.recommendations(seed.work.title).timeout(const Duration(seconds: 15));
+      } catch (_) {
+        continue;
+      }
+      for (var i = 0; i < recs.length; i++) {
+        final w = recs[i];
+        final mine = entries.any((e) => sameWorkAcrossSources(e.work, w));
+        if (mine) continue;
+        final old = votes[w.id];
+        votes[w.id] = (w, (old?.$2 ?? 0) + 1, old == null || i < old.$3 ? i : old.$3);
+        becauseOf.putIfAbsent(w.id, () => seed.work.title);
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+    }
+    final list = votes.values.toList()
+      ..sort((a, b) => a.$2 != b.$2 ? b.$2.compareTo(a.$2) : a.$3.compareTo(b.$3));
+    _forYouAt = DateTime.now();
+    return _forYou = [for (final v in list) v.$1];
+  }
+
+  final Map<String, bool> _availableCache = {};
+
+  /// L'œuvre est listée par au moins un site de cette langue (d'après les
+  /// catalogues des sites déjà lus ; rien n'est téléchargé ici).
+  bool availableIn(WorkInfo w, String lang) {
+    final key = '${w.id}|$lang|${siteIndex.titleCount}';
+    final hit = _availableCache[key];
+    if (hit != null) return hit;
+    var ok = false;
+    for (final l in siteIndex.linksFor([w.title, ...w.altTitles])) {
+      final src = sources.byId(l.sourceId);
+      if (src is PublicCatalogSource && src.site.languages.contains(lang)) {
+        ok = true;
+        break;
+      }
+    }
+    if (_availableCache.length > 20000) _availableCache.clear();
+    return _availableCache[key] = ok;
   }
 
   // ---- Mes moments (pages marquées dans le lecteur) ----
