@@ -198,4 +198,3 @@ class AppUpdater {
     ], mode: ProcessStartMode.detached, runInShell: false);
   }
 }
-}
