@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pazulu_reader/core/achievements.dart';
 import 'package:pazulu_reader/core/app_state.dart';
 import 'package:pazulu_reader/core/host_gate.dart';
 import 'package:pazulu_reader/core/models.dart';
@@ -53,5 +54,11 @@ void main() {
     test('autre œuvre : rien', () {
       expect(AppState.sameMetadataWork('Omniscient Reader', const [], hits), isNull);
     });
+  });
+
+  test('succès : identifiants uniques, nouveaux paliers présents', () {
+    final ids = [for (final a in Achievements.all) a.id];
+    expect(ids.toSet().length, ids.length);
+    expect(ids, containsAll(['ch_25000', 'library_150', 'one_500', 'level_100']));
   });
 }

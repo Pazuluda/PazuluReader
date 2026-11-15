@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:ui' show AppExitResponse, PlatformDispatcher;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'core/app_state.dart';
 import 'core/device_profile.dart';
@@ -59,13 +61,28 @@ Future<void> main() async {
   // updates (site catalogues, chapter lists, new chapters, statuses) run
   // afterwards in background, shown discreetly in the header: the library
   // is usable at once, even on a modest PC.
+  // Modest PC (light mode): the update is done here, on the splash, in one
+  // go and limited in time; once the app is open, background work steps
+  // aside as soon as the user does something. Other PCs: the app opens at
+  // once and updates in background.
+  if (DeviceProfile.light) {
+    await state.warmUp(onStep: progress.report, onSplash: true);
+  }
   progress.reached(5);
   await progress.finish();
-  runApp(PazuluApp(state: state));
-  Timer(Duration(seconds: DeviceProfile.light ? 4 : 2), () {
-    unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
-        .whenComplete(() => state.backgroundStep.value = null));
+  // Every click, scroll or key press: light mode pauses background work.
+  GestureBinding.instance.pointerRouter.addGlobalRoute((_) => state.touch());
+  HardwareKeyboard.instance.addHandler((_) {
+    state.touch();
+    return false;
   });
+  runApp(PazuluApp(state: state));
+  if (!DeviceProfile.light) {
+    Timer(const Duration(seconds: 2), () {
+      unawaited(state.warmUp(onStep: (step) => state.backgroundStep.value = step)
+          .whenComplete(() => state.backgroundStep.value = null));
+    });
+  }
 }
 
 class PazuluApp extends StatefulWidget {

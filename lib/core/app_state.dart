@@ -63,7 +63,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.2.2';
+const String appVersion = '1.3.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -157,8 +157,23 @@ class AppState extends ChangeNotifier {
     while (!_active && !_disposed) {
       await Future<void>.delayed(const Duration(seconds: 2));
     }
+    // Light mode (modest PC): background work steps aside while the user
+    // scrolls, clicks or types, and resumes 4 s after the last action.
+    while (DeviceProfile.light && !_disposed && !_splashWork &&
+        DateTime.now().difference(_userActiveAt) < const Duration(seconds: 4)) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
     if (reading) await Future<void>.delayed(const Duration(milliseconds: 400));
   }
+
+  DateTime _userActiveAt = DateTime(2000);
+
+  /// Called on every click, scroll or key press (main.dart).
+  void touch() => _userActiveAt = DateTime.now();
+
+  /// The start-up update runs on the splash screen (light mode): nobody is
+  /// using the app yet, no need to step aside.
+  bool _splashWork = false;
 
   bool _disposed = false;
 
@@ -1334,7 +1349,20 @@ class AppState extends ChangeNotifier {
   /// first launch = everything (releases + chapter lists of the library);
   /// after a few hours away = the same, shorter thanks to the cache;
   /// otherwise nothing (instant start). The rest refreshes in background.
-  Future<void> warmUp({void Function(String step)? onStep}) async {
+  /// [onSplash]: run while the splash screen is shown (light mode). The
+  /// library's chapters are refreshed there in one go (at most 45 s, lists
+  /// less than 12 h old kept as they are); the sites' catalogues are only
+  /// read there the very first time, otherwise later when the app is idle.
+  Future<void> warmUp({void Function(String step)? onStep, bool onSplash = false}) async {
+    _splashWork = onSplash;
+    try {
+      await _warmUp(onStep: onStep, onSplash: onSplash);
+    } finally {
+      _splashWork = false;
+    }
+  }
+
+  Future<void> _warmUp({void Function(String step)? onStep, bool onSplash = false}) async {
     if (!ready) return;
     // New versions are looked for at once, not after the warm-up.
     await _checkFailedInstall();
@@ -1347,7 +1375,9 @@ class AppState extends ChangeNotifier {
     // what is already known (chapter lists on disk, sites found).
     final first = _warmupAt == null || siteIndex.siteCount == 0;
     final start = DateTime.now();
-    final end = start.add(first ? const Duration(minutes: 5) : const Duration(seconds: 90));
+    final end = start.add(first
+        ? const Duration(minutes: 5)
+        : (onSplash ? const Duration(seconds: 45) : const Duration(seconds: 90)));
     final works = [
       for (final e in entries)
         if (e.work.type != ContentType.anime) e.work,
@@ -1355,8 +1385,10 @@ class AppState extends ChangeNotifier {
     try {
       // 1. Catalogues of every site: all of them the first time, then only
       // those older than 24 h (the rest continues in background).
-      await crawlSiteIndex(onStep: onStep,
-          deadline: first ? start.add(const Duration(minutes: 3)) : start.add(const Duration(seconds: 30)));
+      if (first || !onSplash) {
+        await crawlSiteIndex(onStep: onStep,
+            deadline: first ? start.add(const Duration(minutes: 3)) : start.add(const Duration(seconds: 30)));
+      }
       // 2. Chapters of EVERY library work from all its sites. The lists
       // already on disk less than an hour old are kept as they are: later
       // starts only fetch what changed.
