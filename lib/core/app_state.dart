@@ -27,6 +27,7 @@ import 'achievements.dart';
 import 'bookmarks_import.dart';
 import 'coverage.dart';
 import 'device_profile.dart';
+import 'host_gate.dart';
 import 'language_consensus.dart';
 import 'app_update.dart';
 import 'schedule/mangaupdates.dart';
@@ -61,7 +62,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.1.1';
+const String appVersion = '1.2.0';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -1358,21 +1359,38 @@ class AppState extends ChangeNotifier {
         }
       }
       var done = 0;
-      onStep?.call('Chapitres de la bibliothèque · 0/${queue.length}');
+      final total = queue.length;
+      // Works being read first (most recent progress), then the others.
+      final recent = {
+        for (final e in entries) e.work.id: e.progress.updatedAt ?? e.addedAt,
+      };
+      queue.sort((a, b) => (recent[a.id] ?? DateTime(2000)).compareTo(recent[b.id] ?? DateTime(2000)));
+      onStep?.call('Chapitres de la bibliothèque · 0/$total');
+      chapterGate.perLane = DeviceProfile.enginesPerLanguage;
+      _chapterSourceTimeout = const Duration(seconds: 20);
       Future<void> worker() async {
         while (queue.isNotEmpty && DateTime.now().isBefore(end)) {
           await _breathe();
           final w = queue.removeLast();
           try {
-            await chaptersFor(w, refresh: true).timeout(const Duration(seconds: 50));
+            await chaptersFor(w, refresh: true).timeout(const Duration(seconds: 30));
           } catch (_) {
             // Kept from the previous list; the start-up never blocks on one site.
           }
           done++;
-          onStep?.call('Chapitres de la bibliothèque · $done/${done + queue.length}');
+          onStep?.call('Chapitres de la bibliothèque · $done/$total');
         }
       }
-      await Future.wait([for (var i = 0; i < DeviceProfile.chapterWorkers; i++) worker()]);
+      final chaptersStart = DateTime.now();
+      try {
+        await Future.wait([for (var i = 0; i < DeviceProfile.chapterWorkers; i++) worker()]);
+      } finally {
+        _chapterSourceTimeout = const Duration(seconds: 45);
+      }
+      AppLog.info('Chapitres de la bibliothèque : $done/$total en '
+          '${DateTime.now().difference(chaptersStart).inSeconds} s '
+          '(${DeviceProfile.enginesPerLanguage} moteurs FR + ${DeviceProfile.enginesPerLanguage} EN, '
+          '${DeviceProfile.requestsPerSite} requêtes max par site).');
       // 3. New chapters (notifications) from the lists just loaded.
       if (settings.checkOnStartup && entries.any((e) => e.watch) && DateTime.now().isBefore(end)) {
         onStep?.call('Recherche des nouveaux chapitres…');
@@ -1494,6 +1512,22 @@ class AppState extends ChangeNotifier {
     return future;
   }
 
+  /// Shared by every engine: a French team and an English team (8 engines
+  /// each, they help each other), never more than 2 requests at once on a
+  /// site.
+  final HostGate chapterGate = HostGate(
+      perSite: DeviceProfile.requestsPerSite, perLane: DeviceProfile.enginesPerLanguage);
+
+  /// « fr » for a French-only site, « en » otherwise.
+  String _laneOf(ContentSource source) {
+    final langs = source is PublicCatalogSource ? source.site.languages : const <String>[];
+    return langs.isNotEmpty && langs.every((l) => l == 'fr') ? 'fr' : 'en';
+  }
+
+  /// Shorter wait per site while the library refreshes in background: a
+  /// slow site keeps its previous list and is asked again next time.
+  Duration _chapterSourceTimeout = const Duration(seconds: 45);
+
   Future<List<ChapterGroup>> _fetchChapters(WorkInfo work) async {
     // Every source (integrated connectors AND every directory site, all at
     // the same level) is searched in background for this work; found
@@ -1527,9 +1561,11 @@ class AppState extends ChangeNotifier {
         return;
       }
       try {
-        final chapters = await source.listChapters(
+        final timeout = _chapterSourceTimeout;
+        // The wait for a free engine is not counted, only the site's answer.
+        final chapters = await chapterGate.run(source.id, () => source.listChapters(
           link.workId, langs: settings.comicLangs,
-        ).timeout(const Duration(seconds: 45));
+        ).timeout(timeout), lane: _laneOf(source));
         successes++;
         successful.putIfAbsent(source.id, () => <SourceChapter>[]).addAll(chapters);
         if (source is PublicCatalogSource) {

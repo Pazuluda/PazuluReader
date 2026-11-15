@@ -21,8 +21,17 @@ class DeviceProfile {
   /// Sites whose catalogue is read at the same time.
   static int get crawlWorkers => light ? 3 : 8;
 
-  /// Library works whose chapter lists are refreshed at the same time.
-  static int get chapterWorkers => light ? 2 : 5;
+  /// Engines refreshing the library's chapter lists, each taking the next
+  /// title as soon as it is free (the requests per site stay limited by
+  /// the shared [HostGate]).
+  static int get chapterWorkers => light ? 8 : 16;
+
+  /// Engines per language team (French sites / English sites); a team
+  /// with nothing left helps the other one.
+  static int get enginesPerLanguage => light ? 4 : 8;
+
+  /// Requests at the same time on one site.
+  static const int requestsPerSite = 2;
 
   /// Shortest gap between two refreshes of the screens by background work.
   static Duration get notifyGap =>
