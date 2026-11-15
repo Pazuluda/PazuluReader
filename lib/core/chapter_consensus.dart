@@ -1,3 +1,4 @@
+import '../engine/identity/listing_guard.dart';
 import 'models.dart';
 
 /// What the consensus removed, for the journal.
@@ -124,6 +125,26 @@ class ChapterConsensus {
             'numérotation décalée de ${minusOne > plusOne ? '+1' : '-1'} par rapport aux autres '
             'sites ($off dates sur ${off + same}), mis de côté'));
       }
+    }
+
+    // 1 b. Vote by level on the FINAL list (whatever way each list came
+    // in: new reading, previous list kept, linked site, connector): a
+    // minority of sources far above the largest current group (the novel
+    // « Solo Leveling: Ragnarok », ~200 chapters, against the webtoon's 75
+    // on 4 sites) is hidden, even complete and gap-free. Offline copies
+    // vote but are never hidden.
+    final minority = ListingGuard.minorityLevels(
+      {
+        for (final e in voters.entries)
+          if (!shifted.contains(e.key)) e.key: e.value,
+      },
+      siteOf: (key) => key.split('|').first,
+      protect: {for (final k in voters.keys) if (k.startsWith('local')) k},
+      now: at,
+    );
+    for (final e in minority.entries) {
+      shifted.add(e.key);
+      notes.add(ConsensusNote(e.key.split('|').first, '${e.value}, masqué'));
     }
 
     // 2. Numbers far ahead of the majority, per language (French follows
