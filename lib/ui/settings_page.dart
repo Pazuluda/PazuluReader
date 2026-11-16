@@ -120,6 +120,14 @@ class SettingsPage extends StatelessWidget {
                   ]),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
+                    title: const Text('Résumés en français'),
+                    subtitle: const Text('Sur les fiches, le résumé écrit en français par un site FR ou MangaDex '
+                        'quand il existe (aucune traduction automatique). « Voir l\'original » reste possible.'),
+                    value: s.frenchSummaries,
+                    onChanged: (v) => app.updateSettings((st) => st.frenchSummaries = v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
                     title: const Text('Suivre le thème de Windows'),
                     subtitle: const Text('Clair ou sombre comme Windows, même s\'il change pendant que Pazulu est ouvert.'),
                     value: s.followSystemTheme,

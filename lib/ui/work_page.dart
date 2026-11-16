@@ -65,7 +65,23 @@ class _WorkPageState extends State<WorkPage> {
       _seenRevision = AppScope.read(context).readerRevision(widget.work.id);
     }
     _future ??= _load();
+    if (!_frAsked) {
+      _frAsked = true;
+      final app = AppScope.read(context);
+      _fr = app.cachedFrenchSummary(widget.work.id);
+      if (_fr == null) {
+        // Cherché en arrière-plan ; le résumé d'origine reste affiché d'ici là.
+        app.frenchSummary(widget.work).then((r) {
+          if (r != null && mounted) setState(() => _fr = r);
+        });
+      }
+    }
   }
+
+  /// Résumé en français trouvé (texte, source) et choix « voir l'original ».
+  (String, String)? _fr;
+  bool _frAsked = false;
+  bool _showOriginal = false;
 
   Future<List<ChapterGroup>> _load({bool refresh = false}) async {
     final groups = await AppScope.read(context).chaptersFor(widget.work, refresh: refresh);
@@ -599,14 +615,16 @@ class _WorkPageState extends State<WorkPage> {
       ],
     );
 
-    final description = w.description.isEmpty ? const SizedBox.shrink() : Column(
+    final fr = AppScope.read(context).settings.frenchSummaries ? _fr : null;
+    final summary = fr != null && !_showOriginal ? fr.$1 : w.description;
+    final description = summary.isEmpty ? const SizedBox.shrink() : Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 14),
         AnimatedSize(
           duration: PazuluMotion.of(context, const Duration(milliseconds: 210)),
           alignment: Alignment.topLeft,
-          child: Text(w.description, maxLines: _expanded ? null : 2,
+          child: Text(summary, maxLines: _expanded ? null : 2,
             overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
             style: TextStyle(color: p.text.withValues(alpha: 0.83),
               height: 1.52, fontSize: 14)),
@@ -617,6 +635,15 @@ class _WorkPageState extends State<WorkPage> {
             minimumSize: const Size(52, 36), alignment: Alignment.centerLeft),
           child: Text(_expanded ? 'Réduire le résumé' : 'Lire le résumé complet'),
         ),
+        if (fr != null && w.description.isNotEmpty)
+          Row(children: [
+            Text(_showOriginal ? 'Résumé d\'origine' : 'Résumé en français · ${fr.$2}',
+                style: TextStyle(color: p.muted, fontSize: 12)),
+            TextButton(
+              onPressed: () => setState(() => _showOriginal = !_showOriginal),
+              child: Text(_showOriginal ? 'Voir en français' : 'Voir l\'original'),
+            ),
+          ]),
       ],
     );
 
