@@ -68,6 +68,26 @@ class MangaUpdatesClient {
     return null;
   }
 
+  /// Every name of a series (main title + associated names: English,
+  /// French, romanised, other sites' names…).
+  Future<List<String>> names(int seriesId) async => parseNames(await _get('/v1/series/$seriesId'));
+
+  static List<String> parseNames(String raw) {
+    final json = _decode(raw);
+    if (json is! Map) return const [];
+    final out = <String>[];
+    final title = json['title'];
+    if (title is String && title.trim().isNotEmpty) out.add(title.trim());
+    final assoc = json['associated'];
+    if (assoc is List) {
+      for (final a in assoc) {
+        final t = a is Map ? a['title'] : null;
+        if (t is String && t.trim().isNotEmpty) out.add(t.trim());
+      }
+    }
+    return out;
+  }
+
   /// Status label (« 120 Chapters (Ongoing) », « Complete »…) of a series.
   Future<String?> status(int seriesId) async => parseStatus(await _get('/v1/series/$seriesId'));
 

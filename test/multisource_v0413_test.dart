@@ -9,13 +9,13 @@ import 'package:pazulu_reader/core/suggested_sources.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('200 suggestions are available, but not declared as working connectors', () async {
+  test('201 suggestions are available, but not declared as working connectors', () async {
     final text = await rootBundle.loadString('assets/suggested_sources.json');
     final sites = SuggestedSourceCatalog.parse(text);
-    expect(sites.length, 200);
-    expect(sites.where((s) => s.language == 'fr').length, 53);
+    expect(sites.length, 201); // + Poseidon Scans (1.9.4)
+    expect(sites.where((s) => s.language == 'fr').length, 54);
     expect(sites.where((s) => s.language == 'en').length, 147);
-    expect(sites.where((s) => s.isReportedAccessible).length, 104);
+    expect(sites.where((s) => s.isReportedAccessible).length, 105);
     expect(sites.where((s) => s.reportedStatus == 'Partiel').length, 10);
     expect(sites.where((s) => s.reportedStatus == 'Non confirmé').length, 86);
   });
