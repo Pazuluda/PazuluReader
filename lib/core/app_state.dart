@@ -68,7 +68,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.9.3';
+const String appVersion = '1.9.4';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -522,6 +522,8 @@ class AppState extends ChangeNotifier {
     // Works without a cover (imported from bookmarks…): their fiche is
     // completed from AniList (metadata only).
     Timer(const Duration(seconds: 25), () => unawaited(enrichLibraryMetadata()));
+    // Other titles of the works (rare names after an import…).
+    Timer(const Duration(seconds: 70), () => unawaited(enrichAliases()));
     // Achievements already earned by the existing library.
     Timer(const Duration(seconds: 3), _checkAchievements);
     // The week's planning is prepared quietly: the tab opens instantly.
@@ -3313,6 +3315,70 @@ class AppState extends ChangeNotifier {
   }
 
   bool _enriching = false;
+  bool _aliasing = false;
+
+  /// Autres titres d'une œuvre, d'après MangaUpdates (qui recense tous
+  /// les noms : anglais, français, romanisé, noms des sites…). Une fiche
+  /// importée sous un nom rare (« The Glutton Devourer Of Kings ») apprend
+  /// qu'elle s'appelle aussi « The Second Coming of Gluttony » : les sites
+  /// qui l'ont sous ce nom, l'image et le résumé sont retrouvés. Œuvres
+  /// avec moins de 3 titres connus, une tentative par semaine, une requête
+  /// toutes les 1,5 s au plus.
+  Future<int> enrichAliases({int max = 120}) async {
+    if (_aliasing) return 0;
+    _aliasing = true;
+    var done = 0;
+    try {
+      final todo = [
+        for (final e in entries)
+          if (e.work.type != ContentType.anime && e.work.altTitles.length < 3 &&
+              (_metaTriedAt['mu:${e.work.id}'] == null ||
+                  DateTime.now().difference(_metaTriedAt['mu:${e.work.id}']!) > const Duration(days: 7)))
+            e,
+      ].take(max).toList();
+      for (final e in todo) {
+        if (_disposed) break;
+        await _breathe();
+        final titles = [cleanImportedTitle(e.work.title), ...e.work.altTitles];
+        try {
+          final id = await mangaUpdates.findSeries(titles).timeout(const Duration(seconds: 15));
+          _metaTriedAt['mu:${e.work.id}'] = DateTime.now();
+          if (id == null) continue;
+          final names = await mangaUpdates.names(id).timeout(const Duration(seconds: 15));
+          final known = {for (final t in titles) SiteTitleIndex.norm(t)};
+          final added = [
+            for (final n in names)
+              if (n.length >= 3 && n.length <= 120 && known.add(SiteTitleIndex.norm(n))) n,
+          ];
+          if (added.isEmpty) continue;
+          e.work = WorkInfo.fromJson({
+            ...e.work.toJson(),
+            'altTitles': [...e.work.altTitles, ...added].take(24).toList(),
+          });
+          // New names: sites, cover and summary are looked for again.
+          e.webLookupAt = null;
+          _lookupDoneAt.remove(e.work.id);
+          _metaTriedAt.remove(_metaKey(e));
+          _frTriedAt.remove(e.work.id);
+          done++;
+          _changed();
+        } catch (err) {
+          AppLog.info('Autres titres non trouvés pour ${e.work.title} : $err');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+      }
+      if (done > 0) {
+        AppLog.info('Autres titres ajoutés (MangaUpdates) : $done œuvre(s)');
+        unawaited(_saveLocatedReaders());
+        // Covers of the works that now have more names.
+        unawaited(enrichLibraryMetadata());
+        unawaited(repairLibraryCoverage());
+      }
+    } finally {
+      _aliasing = false;
+    }
+    return done;
+  }
 
   /// Cover addresses that did not load (reported by the screen).
   final Set<String> _brokenCovers = {};
@@ -3526,7 +3592,7 @@ class AppState extends ChangeNotifier {
       _changed();
       // Cover, summary, genres, status: compared with the AniList catalogue
       // right away, the library fills in as the answers arrive.
-      unawaited(enrichLibraryMetadata());
+      unawaited(enrichAliases().then((_) => enrichLibraryMetadata()));
     }
     AppLog.info('Import des favoris : ${marks.length} liens, ${readings.length} lectures, '
         '$added ajoutées, $updated déjà présentes, $positioned positions de lecture.');
