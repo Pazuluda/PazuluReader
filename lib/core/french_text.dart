@@ -24,3 +24,42 @@ class FrenchText {
     return fr >= 3 && fr > en * 1.5;
   }
 }
+
+/// Texte publicitaire d'un site (« Lisez X en français gratuitement sur
+/// Scan Reader. Tous les chapitres disponibles… ») et non un résumé de
+/// l'histoire.
+class SiteBlurb {
+  SiteBlurb._();
+
+  static final RegExp _domain = RegExp(r'\b[a-z0-9-]+\.(com|net|org|fr|io|co|me|xyz|to|cc|gg|site|online|info)\b',
+      caseSensitive: false);
+  static final List<RegExp> _seo = [
+    RegExp(r'\b(lire|lisez|read|regarder)\b', caseSensitive: false),
+    RegExp(r'\bgratuit(e|ement)?\b|\bfree\b|\bfreely\b', caseSensitive: false),
+    RegExp(r'\ben ligne\b|\bonline\b', caseSensitive: false),
+    RegExp(r'\b(scans?|vf|vostfr|raw)\b', caseSensitive: false),
+    RegExp(r'tous les chapitres|all chapters|derniers? chapitres?|latest chapters?|chapitres? disponibles?',
+        caseSensitive: false),
+    RegExp(r'\b(sur|on) (notre|our) site\b|\bmeilleur site\b|\bbest site\b', caseSensitive: false),
+    RegExp(r'\bmanga en fran[cç]ais\b|\bwebtoon en fran[cç]ais\b|\ben fran[cç]ais sur\b', caseSensitive: false),
+    RegExp(r'\bt[ée]l[ée]charg', caseSensitive: false),
+  ];
+
+  /// true quand [text] parle du site (où lire, gratuit, chapitres
+  /// disponibles…) au lieu de raconter l'histoire. [siteName] : le nom du
+  /// site, qui ne figure jamais dans un vrai résumé.
+  static bool looksLike(String text, {String? siteName}) {
+    final t = text.trim();
+    if (t.isEmpty) return true;
+    final lower = t.toLowerCase();
+    if (siteName != null && siteName.length >= 4 && lower.contains(siteName.toLowerCase())) return true;
+    var hits = 0;
+    for (final r in _seo) {
+      if (r.hasMatch(t)) hits++;
+    }
+    if (_domain.hasMatch(t)) hits += 2;
+    // Un vrai résumé long peut contenir un de ces mots ; une phrase de
+    // site en a plusieurs et reste courte.
+    return t.length < 400 ? hits >= 2 : hits >= 4;
+  }
+}
