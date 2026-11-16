@@ -68,7 +68,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.9.2';
+const String appVersion = '1.9.3';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -3140,16 +3140,18 @@ class AppState extends ChangeNotifier {
         if (v is List && v.length == 2) {
           // Textes de site enregistrés par la 1.9.1 : effacés, l'œuvre est
           // recherchée à nouveau.
-          if (SiteBlurb.looksLike('${v[0]}', siteName: '${v[1]}')) {
+          final text = SiteBlurb.strip('${v[0]}', siteName: '${v[1]}');
+          if (text.length < 60) {
             purged.add('${e.key}');
             continue;
           }
-          _frSummaries['${e.key}'] = ('${v[0]}', '${v[1]}');
+          if (text != '${v[0]}') purged.add('');
+          _frSummaries['${e.key}'] = (text, '${v[1]}');
         }
       }
       for (final e in (raw['tried'] as Map? ?? const {}).entries) {
         final d = DateTime.tryParse('${e.value}');
-        if (d != null && !purged.contains('${e.key}') && raw['v'] == 2) _frTriedAt['${e.key}'] = d;
+        if (d != null && !purged.contains('${e.key}') && raw['v'] == 3) _frTriedAt['${e.key}'] = d;
       }
       if (purged.isNotEmpty) _saveFrenchSummariesSoon();
     } catch (_) {}
@@ -3162,7 +3164,7 @@ class AppState extends ChangeNotifier {
       if (f == null) return;
       try {
         await f.writeAsString(jsonEncode({
-          'v': 2,
+          'v': 3,
           'found': {for (final e in _frSummaries.entries) e.key: [e.value.$1, e.value.$2]},
           'tried': {for (final e in _frTriedAt.entries) e.key: e.value.toIso8601String()},
         }));
@@ -3190,8 +3192,8 @@ class AppState extends ChangeNotifier {
 
   Future<(String, String)?> _findFrenchSummary(WorkInfo w) async {
     (String, String)? found;
-    bool good(String t, [String? site]) =>
-        t.trim().length >= 60 && FrenchText.looksFrench(t) && !SiteBlurb.looksLike(t, siteName: site);
+    String clean(String t, [String? site]) => SiteBlurb.strip(t, siteName: site);
+    bool good(String t) => t.trim().length >= 60 && FrenchText.looksFrench(t);
     // 1. Les sites français liés à l'œuvre (3 au plus).
     final frLinks = <SourceLink>[
       for (final l in {...w.links, ...siteIndex.linksFor([w.title, ...w.altTitles])})
@@ -3204,8 +3206,9 @@ class AppState extends ChangeNotifier {
       try {
         final page = await chapterGate.run(src.id, () => src.getWork(l.workId).timeout(const Duration(seconds: 15)),
             lane: 'fr');
-        if (good(page.description, src.name)) {
-          found = (page.description.trim(), src.name);
+        final text = clean(page.description, src.name);
+        if (good(text)) {
+          found = (text, src.name);
           break;
         }
       } catch (_) {}
@@ -3216,10 +3219,9 @@ class AppState extends ChangeNotifier {
         final hits = await _mangadex.search(w.title, limit: 8).timeout(const Duration(seconds: 12));
         final match = sameMetadataWork(w.title, w.altTitles, hits);
         if (match != null) {
-          final text = good(match.description)
-              ? match.description
-              : (await _mangadex.getWork(match.id).timeout(const Duration(seconds: 12))).description;
-          if (good(text)) found = (text.trim(), 'MangaDex');
+          var text = clean(match.description);
+          if (!good(text)) text = clean((await _mangadex.getWork(match.id).timeout(const Duration(seconds: 12))).description);
+          if (good(text)) found = (text, 'MangaDex');
         }
       } catch (_) {}
     }

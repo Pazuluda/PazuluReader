@@ -45,6 +45,36 @@ class SiteBlurb {
     RegExp(r'\bt[ée]l[ée]charg', caseSensitive: false),
   ];
 
+  static final RegExp _strong = RegExp(
+      r"d[ée]couvrez (le|la|les|l')? ?(webtoon|manga|manhwa|manhua|scan|s[ée]rie)|"
+      r"lecture (gratuite|rapide)|(lire|lecture|disponibles?) en ligne|gratuitement|gratuit(e)? sur|"
+      r"en version fran[cç]aise|en fran[cç]ais sur|^\s*(lisez|lire|read)\b|tous les chapitres|"
+      r"chapitres? disponibles?|\bscans? vf\b|\bread\b.{0,60}\bonline\b|\bfor free\b|\bfree online\b|"
+      r"latest chapters?|meilleur site|sur notre site|t[ée]l[ée]charg",
+      caseSensitive: false);
+
+  static String _letters(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  /// Retire les phrases publicitaires du site (« Découvrez le webtoon X en
+  /// version française. Lecture gratuite et rapide sur Mangas Origines - »)
+  /// et garde le vrai résumé qui suit. Texte vide si tout était publicité.
+  static String strip(String text, {String? siteName}) {
+    final site = siteName == null ? '' : _letters(siteName.replaceAll(RegExp(r'\.(com|net|org|fr|io|co|me|to)$'), ''));
+    // Phrases, et morceaux séparés par « - » / « – » / « | ».
+    final parts = text
+        .split(RegExp(r'(?<=[.!?])\s+|\s+[-–—|]\s+'))
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty);
+    final kept = <String>[];
+    for (final part in parts) {
+      final l = _letters(part);
+      final mentionsSite = site.length >= 5 && l.contains(site);
+      if (mentionsSite || _strong.hasMatch(part) || _domain.hasMatch(part)) continue;
+      kept.add(part);
+    }
+    return kept.join(' ').trim();
+  }
+
   /// true quand [text] parle du site (où lire, gratuit, chapitres
   /// disponibles…) au lieu de raconter l'histoire. [siteName] : le nom du
   /// site, qui ne figure jamais dans un vrai résumé.

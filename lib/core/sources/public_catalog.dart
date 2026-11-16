@@ -455,9 +455,10 @@ class PublicCatalogSource
             '.entry-content-single, .sinopsis, #synopsis')?.text ?? '');
     final og = HtmlExtract.cleanText(doc.querySelector('meta[property="og:description"]')?.attributes['content'] ??
         doc.querySelector('meta[name="description"]')?.attributes['content'] ?? '');
-    final desc = block.length >= 40 && !SiteBlurb.looksLike(block, siteName: site.title)
-        ? block
-        : (!SiteBlurb.looksLike(og, siteName: site.title) ? og : '');
+    // Advert sentences of the site removed, the story kept.
+    final cleanBlock = SiteBlurb.strip(block, siteName: site.title);
+    final cleanOg = SiteBlurb.strip(og, siteName: site.title);
+    final desc = cleanBlock.length >= 40 ? cleanBlock : (cleanOg.length >= 40 ? cleanOg : '');
     final cover = doc.querySelector('meta[property="og:image"]')?.attributes['content'] ??
         HtmlExtract.imageUrlOf(doc.querySelector('.summary_image img, .thumb img'), finalUri);
     return WorkInfo(id: '$id:$workId', title: HtmlExtract.cleanText(title),
