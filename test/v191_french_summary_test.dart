@@ -52,4 +52,15 @@ void main() {
         'He must break free from the tower.';
     expect(SiteBlurb.strip(story), story);
   });
+
+  test('résumé coupé par le site : repéré, phrases complètes gardées', () {
+    const cutText = 'Jin Runcandel est le plus jeune fils du plus grand maître épéiste. Après s\'être fait '
+        'exclure de son clan, il connaît un destin tragique... Mais avant de';
+    expect(SiteBlurb.looksCut(cutText), isTrue);
+    expect(SiteBlurb.looksCut('Il devient le plus fort.'), isFalse);
+    final kept = SiteBlurb.keepWholeSentences(cutText);
+    expect(kept, startsWith('Jin Runcandel'));
+    expect(kept, isNot(contains('Mais avant de')));
+    expect(kept, endsWith('…'));
+  });
 }

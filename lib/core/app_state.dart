@@ -3145,6 +3145,11 @@ class AppState extends ChangeNotifier {
             purged.add('${e.key}');
             continue;
           }
+          if (SiteBlurb.looksCut(text)) {
+            // Cut by the site: searched again for a complete one.
+            purged.add('${e.key}');
+            continue;
+          }
           if (text != '${v[0]}') purged.add('');
           _frSummaries['${e.key}'] = (text, '${v[1]}');
         }
@@ -3192,6 +3197,7 @@ class AppState extends ChangeNotifier {
 
   Future<(String, String)?> _findFrenchSummary(WorkInfo w) async {
     (String, String)? found;
+    (String, String)? cut;
     String clean(String t, [String? site]) => SiteBlurb.strip(t, siteName: site);
     bool good(String t) => t.trim().length >= 60 && FrenchText.looksFrench(t);
     // 1. Les sites français liés à l'œuvre (3 au plus).
@@ -3208,8 +3214,13 @@ class AppState extends ChangeNotifier {
             lane: 'fr');
         final text = clean(page.description, src.name);
         if (good(text)) {
-          found = (text, src.name);
-          break;
+          // A complete summary ends the search; a summary cut by the site
+          // is kept aside in case nothing better is found.
+          if (!SiteBlurb.looksCut(text)) {
+            found = (text, src.name);
+            break;
+          }
+          if (cut == null || text.length > cut.$1.length) cut = (text, src.name);
         }
       } catch (_) {}
     }
@@ -3225,6 +3236,9 @@ class AppState extends ChangeNotifier {
         }
       } catch (_) {}
     }
+    // Nothing complete: the longest cut summary, up to its last whole
+    // sentence (« … » shows it was shortened by the site).
+    if (found == null && cut != null) found = (SiteBlurb.keepWholeSentences(cut.$1), cut.$2);
     _frTriedAt[w.id] = DateTime.now();
     if (found != null) _frSummaries[w.id] = found;
     _saveFrenchSummariesSoon();

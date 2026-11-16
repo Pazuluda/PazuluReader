@@ -75,6 +75,30 @@ class SiteBlurb {
     return kept.join(' ').trim();
   }
 
+  /// Le site a coupé le résumé (« … Mais avant de ») : la fin n'est pas une
+  /// phrase complète.
+  static bool looksCut(String text) {
+    final t = text.trimRight();
+    if (t.isEmpty) return false;
+    if (t.endsWith('...') || t.endsWith('…')) return true;
+    return !RegExp(r'[.!?»"”)\]]$').hasMatch(t);
+  }
+
+  /// Garde les phrases complètes d'un résumé coupé, et signale la coupure
+  /// par « … ».
+  static String keepWholeSentences(String text) {
+    final t = text.trim();
+    if (!looksCut(t)) return t;
+    final m = RegExp(r'^.*[.!?»”](?=\s)', dotAll: true).firstMatch(t);
+    var whole = m?.group(0)?.trim() ?? t;
+    if (whole.length < 40) return t;
+    // « tragique... » → « tragique… » ; « épéiste. » → « épéiste. … »
+    if (whole.endsWith('...')) return '${whole.substring(0, whole.length - 3)}…';
+    if (whole.endsWith('…')) return whole;
+    whole = '$whole …';
+    return whole;
+  }
+
   /// true quand [text] parle du site (où lire, gratuit, chapitres
   /// disponibles…) au lieu de raconter l'histoire. [siteName] : le nom du
   /// site, qui ne figure jamais dans un vrai résumé.

@@ -452,7 +452,9 @@ class PublicCatalogSource
     // sur … »), used only when it is not one.
     final block = HtmlExtract.cleanText(doc.querySelector('.summary__content, .entry-content[itemprop=description], '
             '.description-summary, [itemprop=description], .synopsis, .summary .desc, .series-synops, '
-            '.entry-content-single, .sinopsis, #synopsis')?.text ?? '');
+            '.entry-content-single, .sinopsis, #synopsis, .manga-excerpt, .summary-content, '
+            '.post-content_item .summary-content, .manga-summary, .desc-text, .series-desc, '
+            '[class*=synopsis], [class*=resume]')?.text ?? '');
     final og = HtmlExtract.cleanText(doc.querySelector('meta[property="og:description"]')?.attributes['content'] ??
         doc.querySelector('meta[name="description"]')?.attributes['content'] ?? '');
     // Advert sentences of the site removed, the story kept.
