@@ -28,6 +28,7 @@ import 'achievements.dart';
 import 'bookmarks_import.dart';
 import 'coverage.dart';
 import 'device_profile.dart';
+import 'french_text.dart';
 import 'host_gate.dart';
 import 'recap.dart';
 import 'zip_writer.dart';
@@ -67,7 +68,7 @@ import '../engine/routing/smart_router.dart';
 import '../extensions/pack.dart';
 import '../extensions/registry.dart';
 
-const String appVersion = '1.9.0';
+const String appVersion = '1.9.1';
 
 /// GitHub repository of the official releases (« owner/repo »). Empty until
 /// the repository exists: Réglages › Mises à jour can set one meanwhile.
@@ -450,6 +451,7 @@ class AppState extends ChangeNotifier {
       await _initEngine(dir);
       await _loadLocatedReaders();
       await _loadMoments();
+      await _loadFrenchSummaries();
       await _loadHistory();
       final diagDir = Directory('${dir.path}${Platform.pathSeparator}diagnostics');
       PublicCatalogSource.onDiagnosticPage = (sourceId, kind, url, body) {
@@ -3114,6 +3116,107 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // ---- Résumés en français ----
+
+  /// workId → (résumé FR, d'où il vient) ; « » = cherché, rien trouvé.
+  final Map<String, (String, String)> _frSummaries = {};
+  final Map<String, DateTime> _frTriedAt = {};
+  final Map<String, Future<(String, String)?>> _frPending = {};
+  Timer? _frSave;
+
+  File? get _frFile => _supportDir == null
+      ? null
+      : File('${_supportDir!.path}${Platform.pathSeparator}resumes-fr.json');
+
+  Future<void> _loadFrenchSummaries() async {
+    final f = _frFile;
+    if (f == null || !await f.exists()) return;
+    try {
+      final raw = jsonDecode(await f.readAsString());
+      if (raw is! Map) return;
+      for (final e in (raw['found'] as Map? ?? const {}).entries) {
+        final v = e.value;
+        if (v is List && v.length == 2) _frSummaries['${e.key}'] = ('${v[0]}', '${v[1]}');
+      }
+      for (final e in (raw['tried'] as Map? ?? const {}).entries) {
+        final d = DateTime.tryParse('${e.value}');
+        if (d != null) _frTriedAt['${e.key}'] = d;
+      }
+    } catch (_) {}
+  }
+
+  void _saveFrenchSummariesSoon() {
+    _frSave?.cancel();
+    _frSave = Timer(const Duration(seconds: 2), () async {
+      final f = _frFile;
+      if (f == null) return;
+      try {
+        await f.writeAsString(jsonEncode({
+          'found': {for (final e in _frSummaries.entries) e.key: [e.value.$1, e.value.$2]},
+          'tried': {for (final e in _frTriedAt.entries) e.key: e.value.toIso8601String()},
+        }));
+      } catch (_) {}
+    });
+  }
+
+  /// Résumé français déjà trouvé (sans rien chercher).
+  (String, String)? cachedFrenchSummary(String workId) => _frSummaries[workId];
+
+  /// Cherche un résumé en français pour [w] : d'abord sur les sites
+  /// français qui ont l'œuvre (leur page de série, pas d'image), puis sur
+  /// MangaDex. Gardé sur le disque ; une œuvre sans résumé FR n'est
+  /// recherchée à nouveau qu'au bout de 7 jours. Aucun service de
+  /// traduction : seulement des résumés écrits en français.
+  Future<(String, String)?> frenchSummary(WorkInfo w) {
+    if (!settings.frenchSummaries) return Future.value();
+    if (w.description.isNotEmpty && FrenchText.looksFrench(w.description)) return Future.value();
+    final hit = _frSummaries[w.id];
+    if (hit != null) return Future.value(hit);
+    final tried = _frTriedAt[w.id];
+    if (tried != null && DateTime.now().difference(tried) < const Duration(days: 7)) return Future.value();
+    return _frPending[w.id] ??= _findFrenchSummary(w).whenComplete(() => _frPending.remove(w.id));
+  }
+
+  Future<(String, String)?> _findFrenchSummary(WorkInfo w) async {
+    (String, String)? found;
+    bool good(String t) => t.trim().length >= 60 && FrenchText.looksFrench(t);
+    // 1. Les sites français liés à l'œuvre (3 au plus).
+    final frLinks = <SourceLink>[
+      for (final l in {...w.links, ...siteIndex.linksFor([w.title, ...w.altTitles])})
+        if (sources.byId(l.sourceId) case final PublicCatalogSource src
+            when src.site.languages.contains('fr') && !isSourceBlocked(src.id))
+          l,
+    ];
+    for (final l in frLinks.take(3)) {
+      final src = sources.byId(l.sourceId)!;
+      try {
+        final page = await chapterGate.run(src.id, () => src.getWork(l.workId).timeout(const Duration(seconds: 15)),
+            lane: 'fr');
+        if (good(page.description)) {
+          found = (page.description.trim(), src.name);
+          break;
+        }
+      } catch (_) {}
+    }
+    // 2. MangaDex (résumés traduits par sa communauté).
+    if (found == null) {
+      try {
+        final hits = await _mangadex.search(w.title, limit: 8).timeout(const Duration(seconds: 12));
+        final match = sameMetadataWork(w.title, w.altTitles, hits);
+        if (match != null) {
+          final text = good(match.description)
+              ? match.description
+              : (await _mangadex.getWork(match.id).timeout(const Duration(seconds: 12))).description;
+          if (good(text)) found = (text.trim(), 'MangaDex');
+        }
+      } catch (_) {}
+    }
+    _frTriedAt[w.id] = DateTime.now();
+    if (found != null) _frSummaries[w.id] = found;
+    _saveFrenchSummariesSoon();
+    return found;
+  }
+
   // ---- Mes moments (pages marquées dans le lecteur) ----
 
   final List<Moment> moments = [];
@@ -4436,6 +4539,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _frSave?.cancel();
     _onlineTimer?.cancel();
     _brokenTimer?.cancel();
     _trailingNotify?.cancel();

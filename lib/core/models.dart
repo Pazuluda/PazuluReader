@@ -530,6 +530,7 @@ class Settings {
     this.performanceMode = 'auto',
     this.marathonMode = false,
     this.startWithWindows = false,
+    this.frenchSummaries = true,
     this.followSystemTheme = false,
     this.readerDim = 0,
     this.readerWarm = 0,
@@ -578,6 +579,9 @@ class Settings {
 
   /// Lancer Pazulu (réduit) à l'ouverture de session Windows.
   bool startWithWindows;
+
+  /// Résumés en français quand un site FR ou MangaDex en a un.
+  bool frenchSummaries;
 
   /// Mode clair / sombre identique à celui de Windows.
   bool followSystemTheme;
@@ -644,6 +648,7 @@ class Settings {
         'performanceMode': performanceMode,
         'marathonMode': marathonMode,
         'startWithWindows': startWithWindows,
+        'frenchSummaries': frenchSummaries,
         'followSystemTheme': followSystemTheme,
         'readerDim': readerDim,
         'readerWarm': readerWarm,
@@ -679,6 +684,7 @@ class Settings {
           : 'auto',
       marathonMode: (json['marathonMode'] as bool?) ?? false,
       startWithWindows: (json['startWithWindows'] as bool?) ?? false,
+      frenchSummaries: (json['frenchSummaries'] as bool?) ?? true,
       followSystemTheme: (json['followSystemTheme'] as bool?) ?? false,
       readerDim: ((json['readerDim'] as num?) ?? 0).toDouble().clamp(0.0, 0.7),
       readerWarm: ((json['readerWarm'] as num?) ?? 0).toDouble().clamp(0.0, 1.0),
