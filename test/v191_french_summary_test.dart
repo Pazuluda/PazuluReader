@@ -31,4 +31,36 @@ void main() {
         'famille. Revenu dans le passé avec ses souvenirs, il décide de tout reprendre et de devenir '
         'le plus fort, quitte à apprendre à lire les intentions de ses frères.'), isFalse);
   });
+
+  test('publicité devant le vrai résumé : retirée, le résumé est gardé', () {
+    const raw = 'Découvrez le webtoon Full-Time Awakening en version française. Lecture gratuite et rapide sur '
+        'Mangas Origines - En tant que capitaine de la Légion divine et plus puissant Éveillé, Bai Yi est '
+        'trahi par un camarade et voit tous ses coéquipiers mourir sous ses yeux.';
+    final out = SiteBlurb.strip(raw, siteName: 'mangas-origines.fr');
+    expect(out, startsWith('En tant que capitaine'));
+    expect(out, isNot(contains('Origines')));
+    expect(out, isNot(contains('gratuite')));
+    expect(SiteBlurb.strip('Lisez X en français gratuitement sur Scan Reader. Tous les chapitres disponibles en '
+        'lecture en ligne.', siteName: 'scanreader.net'), isEmpty);
+    const real = 'Le jeu de réalité virtuelle « La Tour de l\'Épreuve » est officiellement démodé et le streamer '
+        'Jinhyuk est le seul à être resté jusqu\'au bout pour terminer le jeu.';
+    expect(SiteBlurb.strip(real), real);
+  });
+
+  test('mots du récit gardés (jeu en ligne, se libérer)', () {
+    const story = 'Dans ce jeu en ligne, il est le seul joueur gratuit à atteindre le sommet. '
+        'He must break free from the tower.';
+    expect(SiteBlurb.strip(story), story);
+  });
+
+  test('résumé coupé par le site : repéré, phrases complètes gardées', () {
+    const cutText = 'Jin Runcandel est le plus jeune fils du plus grand maître épéiste. Après s\'être fait '
+        'exclure de son clan, il connaît un destin tragique... Mais avant de';
+    expect(SiteBlurb.looksCut(cutText), isTrue);
+    expect(SiteBlurb.looksCut('Il devient le plus fort.'), isFalse);
+    final kept = SiteBlurb.keepWholeSentences(cutText);
+    expect(kept, startsWith('Jin Runcandel'));
+    expect(kept, isNot(contains('Mais avant de')));
+    expect(kept, endsWith('…'));
+  });
 }
