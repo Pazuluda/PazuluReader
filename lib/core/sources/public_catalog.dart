@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 
+import '../french_text.dart';
 import '../../engine/availability.dart';
 import '../../engine/http/engine_http.dart';
 import '../../engine/http/html_extract.dart';
@@ -446,13 +447,21 @@ class PublicCatalogSource
             '.series-title h1, h1')?.text ??
         doc.querySelector('meta[property="og:title"]')?.attributes['content'] ??
         doc.querySelector('title')?.text ?? site.title;
-    final desc = doc.querySelector('meta[property="og:description"]')?.attributes['content'] ??
-        doc.querySelector('.summary__content, .entry-content[itemprop=description], '
-            '.description-summary')?.text ?? '';
+    // The story summary block of the page first; the og:description is
+    // often the site's advert for search engines (« Lisez X gratuitement
+    // sur … »), used only when it is not one.
+    final block = HtmlExtract.cleanText(doc.querySelector('.summary__content, .entry-content[itemprop=description], '
+            '.description-summary, [itemprop=description], .synopsis, .summary .desc, .series-synops, '
+            '.entry-content-single, .sinopsis, #synopsis')?.text ?? '');
+    final og = HtmlExtract.cleanText(doc.querySelector('meta[property="og:description"]')?.attributes['content'] ??
+        doc.querySelector('meta[name="description"]')?.attributes['content'] ?? '');
+    final desc = block.length >= 40 && !SiteBlurb.looksLike(block, siteName: site.title)
+        ? block
+        : (!SiteBlurb.looksLike(og, siteName: site.title) ? og : '');
     final cover = doc.querySelector('meta[property="og:image"]')?.attributes['content'] ??
         HtmlExtract.imageUrlOf(doc.querySelector('.summary_image img, .thumb img'), finalUri);
     return WorkInfo(id: '$id:$workId', title: HtmlExtract.cleanText(title),
-        description: HtmlExtract.cleanText(desc), coverUrl: cover,
+        description: desc, coverUrl: cover,
         type: _defaultType, languages: site.languages,
         links: [SourceLink(sourceId: id, workId: workId)]);
   }

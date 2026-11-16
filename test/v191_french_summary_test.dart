@@ -18,4 +18,17 @@ void main() {
     final s = Settings()..frenchSummaries = false;
     expect(Settings.fromJson(s.toJson()).frenchSummaries, isFalse);
   });
+
+  test('texte publicitaire de site : pas un résumé', () {
+    expect(SiteBlurb.looksLike(
+        'Lisez Swordmaster’s Youngest Son en français gratuitement sur Scan Reader. '
+        'Tous les chapitres disponibles en lecture en ligne.', siteName: 'scanreader.net'), isTrue);
+    expect(SiteBlurb.looksLike('Lire Solo Leveling VF scan sur mangasite.fr'), isTrue);
+    expect(SiteBlurb.looksLike('Read Omniscient Reader online free, latest chapters.'), isTrue);
+    // Un vrai résumé, même s'il contient « lire » une fois.
+    expect(SiteBlurb.looksLike(
+        'Jin Runcandel, le fils cadet du clan d\'épéistes le plus célèbre du continent, a été chassé de sa '
+        'famille. Revenu dans le passé avec ses souvenirs, il décide de tout reprendre et de devenir '
+        'le plus fort, quitte à apprendre à lire les intentions de ses frères.'), isFalse);
+  });
 }
